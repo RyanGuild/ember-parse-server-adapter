@@ -1,6 +1,6 @@
 {
   "name": "ember-parse-server-adapter",
-  "version": "0.5.3",
+  "version": "1.0.0",
   "description": "Ember Data Adapter for Parse",
   "directories": {
     "doc": "doc",
