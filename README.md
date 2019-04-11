@@ -49,7 +49,9 @@ var ENV = {
 
   APP: {
     applicationId: '<YOUR APP ID HERE>',
-    restApiId: '<YOUR REST API KEY HERE>'
+    restApiId: '<YOUR REST API KEY HERE>',
+    parseUrl: '<your parse url>',
+    namespace: '<base url path>'
   }
 };
 ```
