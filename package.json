@@ -27,7 +27,6 @@
     "broccoli-asset-rev": "^2.0.0",
     "ember-cli": "0.2.7",
     "ember-cli-app-version": "0.3.2",
-    "ember-cli-babel": "^4.0.0",
     "ember-cli-content-security-policy": "0.3.0",
     "ember-cli-dependency-checker": "0.0.8",
     "ember-cli-htmlbars": "0.7.4",
@@ -48,7 +47,9 @@
     "configPath": "tests/dummy/config"
   },
   "dependencies": {
-    "ember-cli-typescript": "^2.0.1"
+    "ember-cli-typescript": "^2.0.1",
+    "ember-cli-babel": "^7.7.3",
+    "@babel/core": "^7.4.3"
   },
   "licenses": [
     "MIT"
