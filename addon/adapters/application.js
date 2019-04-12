@@ -7,8 +7,8 @@ export default DS.RESTAdapter.extend({
 
   init: function () {
     this._super();
-    this.set('host', ENV.APP.parseUrl)
-    if (ENV.APP.namespace) this.set('namespace', ENV.APP.namespace)
+    this.set('host', Ember.get(this, 'parseUrl'))
+    if (ENV.APP.namespace) this.set('namespace', Ember.get(this, 'namespace'))
     this.set('headers', {
       'X-Parse-Application-Id': Ember.get(this, 'applicationId'),
       'X-Parse-REST-API-Key': Ember.get(this, 'restApiId')

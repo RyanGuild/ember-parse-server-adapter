@@ -46,5 +46,11 @@
   ],
   "ember-addon": {
     "configPath": "tests/dummy/config"
-  }
+  },
+  "dependencies": {
+    "ember-cli-typescript": "^2.0.1"
+  },
+  "licenses": [
+    "MIT"
+  ]
 }
