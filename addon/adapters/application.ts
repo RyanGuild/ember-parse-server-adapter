@@ -1,22 +1,38 @@
-import Ember from 'ember';
-import DS from 'ember-data';
+import Ember from 'ember'
+import DS from 'ember-data'
+import { computed } from '@ember/object'
 
-export default DS.RESTAdapter.extend({
+export default class paresAdapter extends DS.RESTAdapter {
 
-  defaultSerializer: '-parse',
+  defaultSerializer = '-parse'
+  classesPath = 'classes'
+  host: string;
+  headers: {};
 
-  init: function () {
-    this._super();
-    this.set('host', Ember.get(this, 'parseUrl'))
-    this.set('namespace', Ember.get(this, 'namespace'))
-    this.set('headers', {
-      'X-Parse-Application-Id': Ember.get(this, 'applicationId'),
-      'X-Parse-REST-API-Key': Ember.get(this, 'restApiId')
-    });
-  },
-  classesPath: 'classes',
 
-  pathForType: function (type) {
+  sessionToken = computed('headers.X-Parse-Session-Token',
+    //@ts-ignore
+    function (key: any, value: String): String {
+      if (arguments.length < 2) {
+        return this.get('headers.X-Parse-Session-Token') as String;
+      } else {
+        this.set('headers.X-Parse-Session-Token', value);
+        return value as String;
+      }
+    })
+
+  constructor(applicationID, restApiID, parseUrl) {
+    super();
+    this.host = parseUrl
+    this.headers = {
+      'X-Parse-Application-Id': applicationID,
+      'X-Parse-REST-API-Key': restApiID
+    }
+  }
+
+
+
+  pathForType(type) {
     if ('parseUser' === type) {
       return 'users';
     } else if ('login' === type) {
@@ -24,13 +40,13 @@ export default DS.RESTAdapter.extend({
     } else {
       return this.classesPath + '/' + this.parsePathForType(type);
     }
-  },
+  }
 
   // Using TitleStyle is recommended by Parse
   // @TODO: test
-  parsePathForType: function (type) {
+  parsePathForType(type): String {
     return Ember.String.capitalize(Ember.String.camelize(type));
-  },
+  }
 
   /**
    * Because Parse doesn't return a full set of properties on the
@@ -38,11 +54,11 @@ export default DS.RESTAdapter.extend({
    * properties onto existing data so that the record maintains
    * latest data.
    */
-  createRecord: function (store, type, record) {
+  createRecord(store, type, record): Ember.RSVP.Promise<any> {
     var serializer = store.serializerFor(type.typeKey),
       snapshot = record._createSnapshot(),
       data = {},
-      adapter = this;
+      adapter: DS.RESTAdapter = this;
 
     serializer.serializeIntoHash(data, type, snapshot, {
       includeId: true
@@ -61,7 +77,7 @@ export default DS.RESTAdapter.extend({
         }
       );
     });
-  },
+  }
 
   /**
    * Because Parse doesn't return a full set of properties on the
@@ -69,14 +85,14 @@ export default DS.RESTAdapter.extend({
    * properties onto existing data so that the record maintains
    * latest data.
    */
-  updateRecord: function (store, type, record) {
+  updateRecord(store, type, record): Ember.RSVP.Promise<any> {
     var serializer = store.serializerFor(type.typeKey),
       snapshot = record._createSnapshot(),
       id = record.get('id'),
       sendDeletes = false,
       deleteds = {},
       data = {},
-      adapter = this;
+      adapter: DS.RESTAdapter = this;
 
     serializer.serializeIntoHash(data, type, snapshot, {
       includeId: true
@@ -127,17 +143,18 @@ export default DS.RESTAdapter.extend({
         );
       }
     });
-  },
+  }
 
-  parseClassName: function (key) {
+  parseClassName(key): String {
     return Ember.String.capitalize(key);
-  },
+  }
 
   /**
    * Implementation of a hasMany that provides a Relation query for Parse
    * objects.
    */
-  findHasMany: function (store, record, relatedInfo) {
+  findHasMany(store, record, relatedInfo): Ember.RSVP.Promise<any> {
+    let adapter: DS.RESTAdapter = this
     var relatedInfo_ = JSON.parse(relatedInfo),
       query = {
         where: {
@@ -154,10 +171,10 @@ export default DS.RESTAdapter.extend({
 
     // the request is to the related type and not the type for the record.
     // the query is where there is a pointer to this record.
-    return this.ajax(this.buildURL(relatedInfo_.typeKey), "GET", {
+    return adapter.ajax(adapter.buildURL(relatedInfo_.typeKey), "GET", {
       data: query
     });
-  },
+  }
 
   /**
    * Implementation of findQuery that automatically wraps query in a
@@ -174,21 +191,14 @@ export default DS.RESTAdapter.extend({
    *       }
    *     });
    */
-  findQuery: function (store, type, query) {
+  findQuery(store, type, query) {
+    let adapter: DS.RESTAdapter = this
     if (query.where && 'string' !== Ember.typeOf(query.where)) {
       query.where = JSON.stringify(query.where);
     }
 
     // Pass to _super()
-    return this._super(store, type, query);
-  },
-
-  sessionToken: Ember.computed('headers.X-Parse-Session-Token', function (key, value) {
-    if (arguments.length < 2) {
-      return this.get('headers.X-Parse-Session-Token');
-    } else {
-      this.set('headers.X-Parse-Session-Token', value);
-      return value;
-    }
-  })
-});
+    //@ts-ignore
+    return adapter._super(store, type, query);
+  }
+}
