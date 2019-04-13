@@ -6,6 +6,7 @@ the [Parse REST API](https://parse.com/docs/rest). This is a full Ember
 implementation against the Parse REST API without the use of the Parse
 JavaScript SDK.
 
+<<<<<<< HEAD
 The demo application contains some example usage.
 
 Features
@@ -17,6 +18,10 @@ Features
   * Provides encoding of hasMany associations to arrays of [Parse Pointer objects](https://parse.com/docs/rest#objects-types).
 
 ##### EmberParseAdapter.Adapter
+=======
+Installation
+------------------------------------------------------------------------------
+>>>>>>> 090608c... message
 
   * Implements the persistence layer to Parse by extending the Ember Data REST Adapter.
   * Provides a `sessionToken` property which can set a session token.
@@ -101,8 +106,33 @@ Demo
 * `ember server`
 * View the demo at http://localhost:4200
 
+<<<<<<< HEAD
 For more information on using ember-cli, visit [http://www.ember-cli.com/](http://www.ember-cli.com/).
+=======
+### Installation
 
+* `git clone <repository-url>`
+* `cd my-addon`
+* `npm install`
+
+### Linting
+
+* `npm run lint:js`
+* `npm run lint:js -- --fix`
+
+### Running tests
+
+* `ember test` – Runs the test suite on the current Ember version
+* `ember test --server` – Runs the test suite in "watch mode"
+* `ember try:each` – Runs the test suite against multiple Ember versions
+
+### Running the dummy application
+
+* `ember serve`
+* Visit the dummy application at [http://localhost:4200](http://localhost:4200).
+>>>>>>> 090608c... message
+
+For more information on using ember-cli, visit [https://ember-cli.com/](https://ember-cli.com/).
 
 Roadmap
 -------
