@@ -8,7 +8,7 @@
     "noImplicitThis": false,
     "alwaysStrict": true,
     "strictNullChecks": true,
-    "strictPropertyInitialization": true,
+    "strictPropertyInitialization": false,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": false,
@@ -19,22 +19,42 @@
     "inlineSources": true,
     "baseUrl": ".",
     "module": "es6",
+    "typeRoots": [
+      "types",
+      "node_modules/@types"
+    ],
     "paths": {
-      "ember-parse-server-adapter/tests/*": [
+      "dummy/tests/*": [
         "tests/*"
       ],
-      "ember-parse-server-adapter/*": [
+      "dummy/*": [
+        "tests/dummy/app/*",
         "app/*"
       ],
+      "ember-parse-server-adapter": [
+        "addon"
+      ],
+      "ember-parse-server-adapter/*": [
+        "addon/*"
+      ],
+      "ember-parse-server-adapter/test-support": [
+        "addon-test-support"
+      ],
+      "ember-parse-server-adapter/test-support/*": [
+        "addon-test-support/*"
+      ],
       "*": [
-        "types/*"
+        "types/*",
+        "node_modules/@types/**/*"
       ]
     }
   },
   "include": [
-    "addon/**/*",
     "app/**/*",
+    "addon/**/*",
     "tests/**/*",
-    "types/**/*"
+    "types/**/*",
+    "test-support/**/*",
+    "addon-test-support/**/*"
   ]
 }

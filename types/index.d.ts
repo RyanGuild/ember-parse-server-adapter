@@ -1,8 +1,0 @@
-declare module 'ember-parse-server-adapter/file'
-declare module 'ember-parse-server-adapter/geopoint'
-declare module 'ember-parse-server-adapter/adapters/application'
-declare module 'ember-parse-server-adapter/initializers/initialize'
-declare module 'ember-parse-server-adapter/serializers/application'
-declare module 'ember-parse-server-adapter/transforms/date'
-declare module 'ember-parse-server-adapter/transforms/file'
-declare module 'ember-parse-server-adapter/transforms/geopoint'

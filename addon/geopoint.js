@@ -1,3 +1,5 @@
-import Ember from 'ember';
+import {
+  default as EmberObject
+} from '@ember/object';
 
-export default Ember.Object.extend();
+export default EmberObject.extend();

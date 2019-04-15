@@ -1,92 +1,107 @@
 import Ember from 'ember';
 import DS from 'ember-data';
+import {
+  dasherize,
+  capitalize,
+  camelize
+} from '@ember/string'
+import {
+  typeOf
+}
+from '@ember/utils'
+import {
+  merge
+}
+from '@ember/polyfills'
 
 export default DS.RESTSerializer.extend({
 
   primaryKey: 'objectId',
 
-  extractArray: function( store, primaryType, payload ) {
+  extractArray: function (store, primaryType, payload) {
     var namespacedPayload = {};
-    namespacedPayload[ Ember.String.pluralize( primaryType.typeKey ) ] = payload.results;
+    namespacedPayload[Ember.String.pluralize(primaryType.typeKey)] = payload.results;
 
-    return this._super( store, primaryType, namespacedPayload );
+    return this._super(store, primaryType, namespacedPayload);
   },
 
-  extractSingle: function( store, primaryType, payload, recordId ) {
+  extractSingle: function (store, primaryType, payload, recordId) {
     var namespacedPayload = {};
-    namespacedPayload[ primaryType.typeKey ] = payload; // this.normalize(primaryType, payload);
+    namespacedPayload[primaryType.typeKey] = payload; // this.normalize(primaryType, payload);
 
-    return this._super( store, primaryType, namespacedPayload, recordId );
+    return this._super(store, primaryType, namespacedPayload, recordId);
   },
 
-  typeForRoot: function( key ) {
-    return Ember.String.dasherize( Ember.String.singularize( key ) );
+  typeForRoot: function (key) {
+    return dasherize(Ember.String.singularize(key));
   },
 
   /**
-  * Because Parse only returns the updatedAt/createdAt values on updates
-  * we have to intercept it here to assure that the adapter knows which
-  * record ID we are dealing with (using the primaryKey).
-  */
-  extract: function( store, type, payload, id, requestType ) {
-    if( id !== null && ( 'updateRecord' === requestType || 'deleteRecord' === requestType ) ) {
-      payload[ this.get( 'primaryKey' ) ] = id;
+   * Because Parse only returns the updatedAt/createdAt values on updates
+   * we have to intercept it here to assure that the adapter knows which
+   * record ID we are dealing with (using the primaryKey).
+   */
+  extract: function (store, type, payload, id, requestType) {
+    if (id !== null && ('updateRecord' === requestType || 'deleteRecord' === requestType)) {
+      payload[this.get('primaryKey')] = id;
     }
 
-    return this._super( store, type, payload, id, requestType );
+    return this._super(store, type, payload, id, requestType);
   },
 
   /**
-  * Extracts count from the payload so that you can get the total number
-  * of records in Parse if you're using skip and limit.
-  */
-  extractMeta: function( store, type, payload ) {
-    if ( payload && payload.count ) {
-      store.setMetadataFor( type, { count: payload.count } );
+   * Extracts count from the payload so that you can get the total number
+   * of records in Parse if you're using skip and limit.
+   */
+  extractMeta: function (store, type, payload) {
+    if (payload && payload.count) {
+      store.setMetadataFor(type, {
+        count: payload.count
+      });
       delete payload.count;
     }
   },
 
   /**
-  * Special handling for the Date objects inside the properties of
-  * Parse responses.
-  */
-  normalizeAttributes: function( type, hash ) {
-    type.eachAttribute( function( key, meta ) {
-      if ( 'date' === meta.type && 'object' === Ember.typeOf( hash[key] ) && hash[key].iso ) {
+   * Special handling for the Date objects inside the properties of
+   * Parse responses.
+   */
+  normalizeAttributes: function (type, hash) {
+    type.eachAttribute(function (key, meta) {
+      if ('date' === meta.type && 'object' === typeOf(hash[key]) && hash[key].iso) {
         hash[key] = hash[key].iso; //new Date(hash[key].iso).toISOString();
       }
     });
 
-    this._super( type, hash );
+    this._super(type, hash);
   },
 
   /**
-  * Special handling of the Parse relation types. In certain
-  * conditions there is a secondary query to retrieve the "many"
-  * side of the "hasMany".
-  */
-  normalizeRelationships: function( type, hash ) {
-    var store      = this.get('store'),
+   * Special handling of the Parse relation types. In certain
+   * conditions there is a secondary query to retrieve the "many"
+   * side of the "hasMany".
+   */
+  normalizeRelationships: function (type, hash) {
+    var store = this.get('store'),
       serializer = this;
 
-    type.eachRelationship( function( key, relationship ) {
+    type.eachRelationship(function (key, relationship) {
 
       var options = relationship.options;
 
       // Handle the belongsTo relationships
-      if ( hash[key] && 'belongsTo' === relationship.kind ) {
+      if (hash[key] && 'belongsTo' === relationship.kind) {
         hash[key] = hash[key].objectId;
       }
 
       // Handle the hasMany relationships
-      if ( hash[key] && 'hasMany' === relationship.kind ) {
+      if (hash[key] && 'hasMany' === relationship.kind) {
 
         // If this is a Relation hasMany then we need to supply
         // the links property so the adapter can async call the
         // relationship.
         // The adapter findHasMany has been overridden to make use of this.
-        if(options.relation) {
+        if (options.relation) {
           // hash[key] contains the response of Parse.com: eg {__type: Relation, className: MyParseClassName}
           // this is an object that make ember-data fail, as it expects nothing or an array ids that represent the records
           hash[key] = [];
@@ -97,16 +112,19 @@ export default DS.RESTSerializer.extend({
             hash.links = {};
           }
 
-          hash.links[key] = JSON.stringify({typeKey: relationship.type.typeKey, key: key});
+          hash.links[key] = JSON.stringify({
+            typeKey: relationship.type.typeKey,
+            key: key
+          });
         }
 
-        if ( options.array ) {
+        if (options.array) {
           // Parse will return [null] for empty relationships
-          if ( hash[key].length && hash[key] ) {
-            hash[key].forEach( function( item, index, items ) {
+          if (hash[key].length && hash[key]) {
+            hash[key].forEach(function (item, index, items) {
               // When items are pointers we just need the id
               // This occurs when request was made without the include query param.
-              if ( 'Pointer' === item.__type ) {
+              if ('Pointer' === item.__type) {
                 items[index] = item.objectId;
 
               } else {
@@ -117,108 +135,121 @@ export default DS.RESTSerializer.extend({
                 item.id = item.objectId;
                 delete item.objectId;
                 item.type = relationship.type;
-                serializer.normalizeAttributes( relationship.type, item );
-                serializer.normalizeRelationships( relationship.type, item );
-                store.push( relationship.type, item );
+                serializer.normalizeAttributes(relationship.type, item);
+                serializer.normalizeRelationships(relationship.type, item);
+                store.push(relationship.type, item);
               }
             });
           }
         }
       }
-    }, this );
+    }, this);
 
-    this._super( type, hash );
+    this._super(type, hash);
   },
 
-  serializeIntoHash: function( hash, type, snapshot, options ) {
-    Ember.merge( hash, this.serialize( snapshot, options ) );
+  serializeIntoHash: function (hash, type, snapshot, options) {
+    merge(hash, this.serialize(snapshot, options));
   },
 
-  serializeAttribute: function( snapshot, json, key, attribute ) {
+  serializeAttribute: function (snapshot, json, key, attribute) {
     // These are Parse reserved properties and we won't send them.
-    if ( 'createdAt' === key ||
-         'updatedAt' === key ||
-         'emailVerified' === key ||
-         'sessionToken' === key
+    if ('createdAt' === key ||
+      'updatedAt' === key ||
+      'emailVerified' === key ||
+      'sessionToken' === key
     ) {
       delete json[key];
 
     } else {
-      this._super( snapshot, json, key, attribute );
+      this._super(snapshot, json, key, attribute);
     }
   },
 
-  serializeBelongsTo: function( snapshot, json, relationship ) {
-    var key         = relationship.key,
-        belongsToId = snapshot.belongsTo(key, { id: true });
+  serializeBelongsTo: function (snapshot, json, relationship) {
+    var key = relationship.key,
+      belongsToId = snapshot.belongsTo(key, {
+        id: true
+      });
 
-    if ( belongsToId ) {
+    if (belongsToId) {
       json[key] = {
-        '__type'    : 'Pointer',
-        'className' : this.parseClassName(key),
-        'objectId'  : belongsToId
+        '__type': 'Pointer',
+        'className': this.parseClassName(key),
+        'objectId': belongsToId
       };
     }
   },
 
-  parseClassName: function( key ) {
-    if ( 'parseUser' === key) {
+  parseClassName: function (key) {
+    if ('parseUser' === key) {
       return '_User';
 
     } else {
-      return Ember.String.capitalize( Ember.String.camelize( key ) );
+      return capitalize(camelize(key));
     }
   },
 
-  serializeHasMany: function( snapshot, json, relationship ) {
-    var key   = relationship.key,
-      hasMany = snapshot.hasMany( key ),
+  serializeHasMany: function (snapshot, json, relationship) {
+    var key = relationship.key,
+      hasMany = snapshot.hasMany(key),
       options = relationship.options,
-      _this   = this;
+      _this = this;
 
-    if ( hasMany && hasMany.get( 'length' ) > 0 ) {
-      json[key] = { 'objects': [] };
+    if (hasMany && hasMany.get('length') > 0) {
+      json[key] = {
+        'objects': []
+      };
 
-      if ( options.relation ) {
+      if (options.relation) {
         json[key].__op = 'AddRelation';
       }
 
-      if ( options.array ) {
+      if (options.array) {
         json[key].__op = 'AddUnique';
       }
 
-      hasMany.forEach( function( child ) {
+      hasMany.forEach(function (child) {
         json[key].objects.push({
-          '__type'    : 'Pointer',
-          'className' : _this.parseClassName(child.type.typeKey),
-          'objectId'  : child.attr( 'id' )
+          '__type': 'Pointer',
+          'className': _this.parseClassName(child.type.typeKey),
+          'objectId': child.attr('id')
         });
       });
 
-      if ( hasMany._deletedItems && hasMany._deletedItems.length ) {
-        if ( options.relation ) {
-          var addOperation    = json[key],
-            deleteOperation = { '__op': 'RemoveRelation', 'objects': [] };
+      if (hasMany._deletedItems && hasMany._deletedItems.length) {
+        if (options.relation) {
+          var addOperation = json[key],
+            deleteOperation = {
+              '__op': 'RemoveRelation',
+              'objects': []
+            };
 
-          hasMany._deletedItems.forEach( function( item ) {
+          hasMany._deletedItems.forEach(function (item) {
             deleteOperation.objects.push({
-              '__type'    : 'Pointer',
-              'className' : item.type,
-              'objectId'  : item.id
+              '__type': 'Pointer',
+              'className': item.type,
+              'objectId': item.id
             });
           });
 
-          json[key] = { '__op': 'Batch', 'ops': [addOperation, deleteOperation] };
+          json[key] = {
+            '__op': 'Batch',
+            'ops': [addOperation, deleteOperation]
+          };
         }
 
-        if ( options.array ) {
-          json[key].deleteds = { '__op': 'Remove', 'objects': [] };
+        if (options.array) {
+          json[key].deleteds = {
+            '__op': 'Remove',
+            'objects': []
+          };
 
-          hasMany._deletedItems.forEach( function( item ) {
+          hasMany._deletedItems.forEach(function (item) {
             json[key].deleteds.objects.push({
-              '__type'    : 'Pointer',
-              'className' : item.type,
-              'objectId'  : item.id
+              '__type': 'Pointer',
+              'className': item.type,
+              'objectId': item.id
             });
           });
         }

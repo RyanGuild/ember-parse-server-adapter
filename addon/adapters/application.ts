@@ -1,8 +1,9 @@
 import Ember from 'ember'
 import DS from 'ember-data'
 import { computed } from '@ember/object'
+import { Promise } from 'rsvp'
 
-export default class paresAdapter extends DS.RESTAdapter {
+export default class parseAdapter extends DS.RESTAdapter {
 
   defaultSerializer = '-parse'
   classesPath = 'classes'
@@ -54,7 +55,7 @@ export default class paresAdapter extends DS.RESTAdapter {
    * properties onto existing data so that the record maintains
    * latest data.
    */
-  createRecord(store, type, record): Ember.RSVP.Promise<any> {
+  createRecord(store, type, record): Promise<any> {
     var serializer = store.serializerFor(type.typeKey),
       snapshot = record._createSnapshot(),
       data = {},
@@ -64,7 +65,7 @@ export default class paresAdapter extends DS.RESTAdapter {
       includeId: true
     });
 
-    return new Ember.RSVP.Promise(function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
       adapter.ajax(adapter.buildURL(type.typeKey), 'POST', {
         data: data
       }).then(
@@ -85,7 +86,7 @@ export default class paresAdapter extends DS.RESTAdapter {
    * properties onto existing data so that the record maintains
    * latest data.
    */
-  updateRecord(store, type, record): Ember.RSVP.Promise<any> {
+  updateRecord(store, type, record): Promise<any> {
     var serializer = store.serializerFor(type.typeKey),
       snapshot = record._createSnapshot(),
       id = record.get('id'),
@@ -106,7 +107,7 @@ export default class paresAdapter extends DS.RESTAdapter {
       }
     });
 
-    return new Ember.RSVP.Promise(function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
       if (sendDeletes) {
         adapter.ajax(adapter.buildURL(type.typeKey, id), 'PUT', {
           data: deleteds
