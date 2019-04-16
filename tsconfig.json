@@ -10,7 +10,7 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": false,
     "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noEmitOnError": false,
@@ -44,8 +44,7 @@
         "addon-test-support/*"
       ],
       "*": [
-        "types/*",
-        "node_modules/@types/**/*"
+        "types/*"
       ]
     }
   },

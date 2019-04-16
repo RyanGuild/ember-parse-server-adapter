@@ -5,6 +5,7 @@ module.exports = {
     'Chrome'
   ],
   launch_in_dev: [
+    'PhantomJS',
     'Chrome'
   ],
   browser_args: {

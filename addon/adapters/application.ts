@@ -1,17 +1,14 @@
 import Ember from 'ember'
 import DS from 'ember-data'
 import { computed } from '@ember/object'
-import { Promise } from 'rsvp'
+import RSVP from 'rsvp'
+import { ModelRegistry } from 'ember-data/model'
 
-export default class parseAdapter extends DS.RESTAdapter {
+export default DS.RESTAdapter.extend({
 
-  defaultSerializer = '-parse'
-  classesPath = 'classes'
-  host: string;
-  headers: {};
-
-
-  sessionToken = computed('headers.X-Parse-Session-Token',
+  defaultSerializer:'-parse',
+  classesPath:'classes',
+  sessionToken: computed('headers.X-Parse-Session-Token',
     //@ts-ignore
     function (key: any, value: String): String {
       if (arguments.length < 2) {
@@ -20,17 +17,7 @@ export default class parseAdapter extends DS.RESTAdapter {
         this.set('headers.X-Parse-Session-Token', value);
         return value as String;
       }
-    })
-
-  constructor(applicationID, restApiID, parseUrl) {
-    super();
-    this.host = parseUrl
-    this.headers = {
-      'X-Parse-Application-Id': applicationID,
-      'X-Parse-REST-API-Key': restApiID
-    }
-  }
-
+    }),
 
 
   pathForType(type) {
@@ -41,13 +28,13 @@ export default class parseAdapter extends DS.RESTAdapter {
     } else {
       return this.classesPath + '/' + this.parsePathForType(type);
     }
-  }
+  },
 
   // Using TitleStyle is recommended by Parse
   // @TODO: test
   parsePathForType(type): String {
     return Ember.String.capitalize(Ember.String.camelize(type));
-  }
+  },
 
   /**
    * Because Parse doesn't return a full set of properties on the
@@ -55,18 +42,14 @@ export default class parseAdapter extends DS.RESTAdapter {
    * properties onto existing data so that the record maintains
    * latest data.
    */
-  createRecord(store, type, record): Promise<any> {
-    var serializer = store.serializerFor(type.typeKey),
-      snapshot = record._createSnapshot(),
-      data = {},
-      adapter: DS.RESTAdapter = this;
+  createRecord<k extends never>(store :DS.Store, type :ModelRegistry[k], record :DS.Snapshot<k>): RSVP.Promise<any> {
+    let serializer = store.serializerFor(type) as DS.Serializer
+    let adapter: DS.RESTAdapter = this
 
-    serializer.serializeIntoHash(data, type, snapshot, {
-      includeId: true
-    });
+    let data = serializer.serialize(record, {includeId: true});
 
-    return new Promise(function (resolve, reject) {
-      adapter.ajax(adapter.buildURL(type.typeKey), 'POST', {
+    return new RSVP.Promise(function (resolve, reject) {
+      adapter.ajax(adapter.buildURL(type), 'POST', {
         data: data
       }).then(
         function (json) {
@@ -78,7 +61,7 @@ export default class parseAdapter extends DS.RESTAdapter {
         }
       );
     });
-  }
+  },
 
   /**
    * Because Parse doesn't return a full set of properties on the
@@ -86,19 +69,16 @@ export default class parseAdapter extends DS.RESTAdapter {
    * properties onto existing data so that the record maintains
    * latest data.
    */
-  updateRecord(store, type, record): Promise<any> {
-    var serializer = store.serializerFor(type.typeKey),
-      snapshot = record._createSnapshot(),
-      id = record.get('id'),
-      sendDeletes = false,
-      deleteds = {},
-      data = {},
-      adapter: DS.RESTAdapter = this;
+  updateRecord<k extends never>(store :DS.Store, type:ModelRegistry[k], record :DS.Snapshot<k>): RSVP.Promise<any> {
+    let serializer = store.serializerFor(type) as DS.Serializer
+    let id = record.id
+    let sendDeletes = false
+    let deleteds = {}
+    let adapter: DS.RESTAdapter = this
 
-    serializer.serializeIntoHash(data, type, snapshot, {
-      includeId: true
-    });
-
+    let data = serializer.serialize(record, {includeId: true});
+    
+    /*
     type.eachRelationship(function (key) {
       if (data[key] && data[key].deleteds) {
         deleteds[key] = data[key].deleteds;
@@ -106,14 +86,15 @@ export default class parseAdapter extends DS.RESTAdapter {
         sendDeletes = true;
       }
     });
+    */
 
-    return new Promise(function (resolve, reject) {
+    return new RSVP.Promise(function (resolve, reject) {
       if (sendDeletes) {
-        adapter.ajax(adapter.buildURL(type.typeKey, id), 'PUT', {
+        adapter.ajax(adapter.buildURL(type, id), 'PUT', {
           data: deleteds
         }).then(
           function () {
-            adapter.ajax(adapter.buildURL(type.typeKey, id), 'PUT', {
+            adapter.ajax(adapter.buildURL(type, id), 'PUT', {
               data: data
             }).then(
               function (updates) {
@@ -131,7 +112,7 @@ export default class parseAdapter extends DS.RESTAdapter {
         );
 
       } else {
-        adapter.ajax(adapter.buildURL(type.typeKey, id), 'PUT', {
+        adapter.ajax(adapter.buildURL(type, id), 'PUT', {
           data: data
         }).then(
           function (json) {
@@ -144,11 +125,11 @@ export default class parseAdapter extends DS.RESTAdapter {
         );
       }
     });
-  }
+  },
 
   parseClassName(key): String {
     return Ember.String.capitalize(key);
-  }
+  },
 
   /**
    * Implementation of a hasMany that provides a Relation query for Parse
@@ -175,7 +156,7 @@ export default class parseAdapter extends DS.RESTAdapter {
     return adapter.ajax(adapter.buildURL(relatedInfo_.typeKey), "GET", {
       data: query
     });
-  }
+  },
 
   /**
    * Implementation of findQuery that automatically wraps query in a
@@ -202,4 +183,4 @@ export default class parseAdapter extends DS.RESTAdapter {
     //@ts-ignore
     return adapter._super(store, type, query);
   }
-}
+})

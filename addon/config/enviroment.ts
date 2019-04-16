@@ -1,6 +1,7 @@
+
 'use strict';
 
-module.exports = function (environment) {
+export default function (environment) {
   let ENV = {
     modulePrefix: 'ember-parse-server-adapter',
     environment,

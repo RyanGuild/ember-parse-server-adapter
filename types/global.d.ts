@@ -9,7 +9,7 @@ declare module 'ember-parse-server-adapter/templates/*' {
 
 declare module 'ember-data/types/registries/adapter' {
   export default interface AdapterRegistry {
-    'application': parseAdapter
+    '-parse': parseAdapter
   }
 }
 
