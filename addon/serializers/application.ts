@@ -6,6 +6,10 @@ import {
   camelize
 } from '@ember/string'
 import {
+  pluralize,
+  singularize
+} from 'ember-inflector'
+import {
   typeOf
 }
 from '@ember/utils'
@@ -20,7 +24,7 @@ export default DS.RESTSerializer.extend({
 
   extractArray: function (store, primaryType, payload) {
     var namespacedPayload = {};
-    namespacedPayload[Ember.String.pluralize(primaryType.typeKey)] = payload.results;
+    namespacedPayload[pluralize(primaryType.typeKey)] = payload.results;
 
     return this._super(store, primaryType, namespacedPayload);
   },
@@ -33,7 +37,7 @@ export default DS.RESTSerializer.extend({
   },
 
   typeForRoot: function (key) {
-    return dasherize(Ember.String.singularize(key));
+    return dasherize(singularize(key));
   },
 
   /**
@@ -68,6 +72,7 @@ export default DS.RESTSerializer.extend({
    */
   normalizeAttributes: function (type, hash) {
     type.eachAttribute(function (key, meta) {
+      //@ts-ignore
       if ('date' === meta.type && 'object' === typeOf(hash[key]) && hash[key].iso) {
         hash[key] = hash[key].iso; //new Date(hash[key].iso).toISOString();
       }
@@ -227,8 +232,11 @@ export default DS.RESTSerializer.extend({
 
           hasMany._deletedItems.forEach(function (item) {
             deleteOperation.objects.push({
+              //@ts-ignore
               '__type': 'Pointer',
+              //@ts-ignore
               'className': item.type,
+              //@ts-ignore
               'objectId': item.id
             });
           });

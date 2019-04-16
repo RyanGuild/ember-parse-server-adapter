@@ -40,7 +40,7 @@ module('Unit | Adapter | application', function(hooks){
         }
       }
     }
-
+    //@ts-ignore
     var model :DS.Model = DS.Model.extend({ testname: DS.attr('string') })
 
     var serializer = this.owner.lookup('serializer:-parse')
@@ -69,6 +69,7 @@ module('Unit | Adapter | application', function(hooks){
       }
     }
 
+    //@ts-ignore
     var model :DS.Model = DS.Model.extend({ testname: DS.attr('string') })
 
     var serializer :DS.Serializer = this.owner.lookup('serializer:-parse')

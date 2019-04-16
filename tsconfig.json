@@ -20,8 +20,7 @@
     "baseUrl": ".",
     "module": "es6",
     "typeRoots": [
-      "types",
-      "node_modules/@types"
+      "types"
     ],
     "paths": {
       "dummy/tests/*": [

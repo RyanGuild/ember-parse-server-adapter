@@ -78,7 +78,7 @@ export default DS.RESTAdapter.extend({
 
     let data = serializer.serialize(record, {includeId: true});
     
-    /*
+    //@ts-ignore
     type.eachRelationship(function (key) {
       if (data[key] && data[key].deleteds) {
         deleteds[key] = data[key].deleteds;
@@ -86,7 +86,7 @@ export default DS.RESTAdapter.extend({
         sendDeletes = true;
       }
     });
-    */
+    
 
     return new RSVP.Promise(function (resolve, reject) {
       if (sendDeletes) {
