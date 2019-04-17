@@ -87,3 +87,4 @@ ParseUser.reopenClass({
 });
 
 export default ParseUser;
+export { default as ModelRegistry } from 'ember-data/types/registries/model'

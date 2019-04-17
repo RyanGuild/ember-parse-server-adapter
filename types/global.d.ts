@@ -7,15 +7,3 @@ declare module 'ember-parse-server-adapter/templates/*' {
   const tmpl: TemplateFactory;
   export default tmpl;
 }
-
-declare module 'ember-data/types/registries/adapter' {
-  export default interface AdapterRegistry {
-    '-parse': typeof parseAdapter
-  }
-}
-
-declare module 'ember-data/types/registries/serializer' {
-  export default interface SerializerRegistry {
-    '-parse': typeof parseSerializer
-  }
-}

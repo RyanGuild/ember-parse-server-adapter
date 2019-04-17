@@ -184,3 +184,5 @@ export default DS.RESTAdapter.extend({
     return adapter._super(store, type, query);
   }
 })
+
+export { default as AdapterRegistry } from 'ember-data/types/registries/adapter'

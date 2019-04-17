@@ -55,3 +55,5 @@ export default DS.Transform.extend({
   }
 
 });
+
+export { default as TransformRegistry } from 'ember-data/types/registries/transform'

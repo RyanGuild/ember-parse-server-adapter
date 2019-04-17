@@ -13,7 +13,7 @@ let ENV = config('development')
 @module initializers
 @class  initialize
 */
-export default function (container, app) {
+export default function (container) {
 
   let configuredAdapter = Adapter.extend({
     host: ENV.APP.parseUrl,

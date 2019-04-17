@@ -269,3 +269,6 @@ export default DS.RESTSerializer.extend({
   }
 
 });
+
+
+export { default as SerializerRegistry } from 'ember-data/types/registries/serializer'
