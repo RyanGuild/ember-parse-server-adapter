@@ -31,29 +31,27 @@ import GeoPoint from './geopoint';
  */
 export default DS.Transform.extend({
 
-  deserialize: function( serialized ) {
+  deserialize: function( serialized :{latitude: number, longitude: number}) {
     if ( !serialized ) {
       return null;
     }
-
+    console.log(serialized)
     return GeoPoint.create({
       latitude  : serialized.latitude,
       longitude : serialized.longitude
     });
   },
 
-  serialize: function( deserialized ) {
-    if ( !deserialized ) {
+  serialize: function( deserialized :DS.Model) {
+    if (!deserialized) {
       return null;
     }
-
+    console.log(Object.entries(deserialized))
     return {
       __type    : 'GeoPoint',
-      latitude  : deserialized.get( 'latitude' ),
-      longitude : deserialized.get( 'longitude' )
+      latitude  : deserialized.get('latitude'),
+      longitude : deserialized.get('longitude')
     };
   }
 
 });
-
-export { default as TransformRegistry } from 'ember-data/types/registries/transform'

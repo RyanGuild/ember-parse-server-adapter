@@ -1,9 +1,9 @@
 import {
+  test,
   setupTest
 } from 'ember-qunit';
 
 import {
-  test,
   module
 } from 'qunit'
 import DS from 'ember-data';

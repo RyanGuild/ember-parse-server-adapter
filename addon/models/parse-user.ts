@@ -1,25 +1,25 @@
 import DS from 'ember-data'
-import {
+import RSVP, {
   reject
 } from 'rsvp'
 import {
   isEmpty
 } from '@ember/utils'
+import Ember from 'ember'
+import Mixin from '@ember/object/mixin';
 
-/**
- * Parse User object implementation
- *
- * @type {DS.ParseModel}
- */
-var ParseUser = DS.Model.extend({
-  username: DS.attr('string'),
-  password: DS.attr('string'),
-  email: DS.attr('string'),
-  emailVerified: DS.attr('boolean'),
-  sessionToken: DS.attr('string'),
-  createdAt: DS.attr('date'),
-  updatedAt: DS.attr('date')
-});
+
+var ParseUser = DS.Model.extend(
+  {
+    username: DS.attr('string'),
+    password: DS.attr('string'),
+    email: DS.attr('string'),
+    emailVerified: DS.attr('boolean'),
+    sessionToken: DS.attr('string'),
+    createdAt: DS.attr('date'),
+    updatedAt: DS.attr('date')
+  }
+);
 
 ParseUser.reopenClass({
   requestPasswordReset: function (email) {
@@ -60,31 +60,34 @@ ParseUser.reopenClass({
     );
   },
 
-  signup: function (store, data) {
-    var model = this,
-      adapter = store.adapterFor(model),
-      serializer = store.serializerFor(model);
+  signup: function (store :DS.Store, data: {username: string, email: string, password: string}): RSVP.Promise<DS.Model | any[]> {
+    let model :DS.Model = this
+    //@ts-ignore
+    let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
+    //@ts-ignore
+    let serializer :DS.RESTSerializer = store.serializerFor('parse-user')
 
-    if (isEmpty(this.typeKey)) {
-      throw new Error('Parse signup must be called on a model fetched via store.modelFor');
-    }
-
-    return adapter.ajax(adapter.buildURL(model.typeKey), 'POST', {
+    return new RSVP.Promise((resolve, _) => { 
+    //@ts-ignore
+    adapter.ajax(adapter.buildURL('parseUser'), 'POST', {
       data: data
-    }).then(
+    })
+    .then(
       function (response) {
-        serializer.normalize(model, response);
-        response.email = response.email || data.email;
-        response.username = response.username || data.username;
-        var record = store.push(model, response);
-        return record;
-      },
-      function (response) {
-        return reject(response.responseJSON);
-      }
-    );
+        let merged = Object.assign({}, data, response)
+        //@ts-ignore
+        let record = store.push(store.normalize('parse-user', merged))
+        resolve(record)
+      })
+    .catch(
+      function(e :ExceptionInformation){
+        throw `failed to create user: ${e}`
+      })
+    })
   }
-});
 
-export default ParseUser;
-export { default as ModelRegistry } from 'ember-data/types/registries/model'
+})
+
+
+export default ParseUser
+

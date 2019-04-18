@@ -3,6 +3,12 @@ import DS from 'ember-data'
 import { computed } from '@ember/object'
 import RSVP from 'rsvp'
 import { ModelRegistry } from 'ember-data/model'
+import { typeOf } from '@ember/utils';
+import {
+  dasherize,
+  capitalize,
+  camelize
+} from '@ember/string'
 
 export default DS.RESTAdapter.extend({
 
@@ -21,6 +27,7 @@ export default DS.RESTAdapter.extend({
 
 
   pathForType(type) {
+    console.debug('pathForType:', type)
     if ('parseUser' === type) {
       return 'users';
     } else if ('login' === type) {
@@ -33,7 +40,8 @@ export default DS.RESTAdapter.extend({
   // Using TitleStyle is recommended by Parse
   // @TODO: test
   parsePathForType(type): String {
-    return Ember.String.capitalize(Ember.String.camelize(type));
+    console.log('make parse path:', type)
+    return capitalize(camelize(type))
   },
 
   /**
@@ -43,24 +51,26 @@ export default DS.RESTAdapter.extend({
    * latest data.
    */
   createRecord<k extends never>(store :DS.Store, type :ModelRegistry[k], record :DS.Snapshot<k>): RSVP.Promise<any> {
-    let serializer = store.serializerFor(type) as DS.Serializer
+    console.debug('createRecord type:', record.modelName)
+    let serializer :DS.RESTSerializer = store.serializerFor(record.modelName)
     let adapter: DS.RESTAdapter = this
-
-    let data = serializer.serialize(record, {includeId: true});
-
-    return new RSVP.Promise(function (resolve, reject) {
-      adapter.ajax(adapter.buildURL(type), 'POST', {
-        data: data
-      }).then(
-        function (json) {
-          var completed = Ember.merge(data, json);
-          resolve(completed);
-        },
-        function (reason) {
-          reject(reason.responseJSON);
-        }
-      );
-    });
+    let data :{} = serializer.serialize(record, {includeId: true});
+    let url = adapter.buildURL(record.modelName, record.id)
+    return new RSVP.Promise(
+      function (resolve, reject) {
+        adapter.ajax(url, 'POST', {
+          data: data
+        }).then(
+          function (json) {
+            let formated = {}
+            formated[url] = Object.assign({},data, json)
+            resolve(formated);
+          },
+          function (reason) {
+            reject(reason.responseJSON);
+          }
+        );
+      });
   },
 
   /**
@@ -70,7 +80,8 @@ export default DS.RESTAdapter.extend({
    * latest data.
    */
   updateRecord<k extends never>(store :DS.Store, type:ModelRegistry[k], record :DS.Snapshot<k>): RSVP.Promise<any> {
-    let serializer = store.serializerFor(type) as DS.Serializer
+    console.debug('updateRecord type:', type)
+    let serializer :DS.RESTSerializer = store.serializerFor(record.modelName)
     let id = record.id
     let sendDeletes = false
     let deleteds = {}
@@ -78,6 +89,7 @@ export default DS.RESTAdapter.extend({
 
     let data = serializer.serialize(record, {includeId: true});
     
+    console.log('data serialized for update')
     //@ts-ignore
     type.eachRelationship(function (key) {
       if (data[key] && data[key].deleteds) {
@@ -87,19 +99,21 @@ export default DS.RESTAdapter.extend({
       }
     });
     
-
+    let url = adapter.buildURL(type, id)
     return new RSVP.Promise(function (resolve, reject) {
       if (sendDeletes) {
-        adapter.ajax(adapter.buildURL(type, id), 'PUT', {
+        adapter.ajax(url, 'PUT', {
           data: deleteds
         }).then(
           function () {
-            adapter.ajax(adapter.buildURL(type, id), 'PUT', {
+            console.log('deletes put')
+            adapter.ajax(url, 'PUT', {
               data: data
             }).then(
               function (updates) {
-                // This is the essential bit - merge response data onto existing data.
-                resolve(Ember.merge(data, updates));
+                let formated = {}
+                formated[url] = Object.assign({},data, updates)
+                resolve(formated);
               },
               function (reason) {
                 reject('Failed to save parent in relation: ' + reason.response.JSON);
@@ -112,12 +126,13 @@ export default DS.RESTAdapter.extend({
         );
 
       } else {
-        adapter.ajax(adapter.buildURL(type, id), 'PUT', {
+        adapter.ajax(url, 'PUT', {
           data: data
         }).then(
-          function (json) {
-            // This is the essential bit - merge response data onto existing data.
-            resolve(Ember.merge(data, json));
+          function (updates) {
+            let formated = {}
+            formated[url] = Object.assign({},data, updates)
+            resolve(formated);
           },
           function (reason) {
             reject(reason.responseJSON);
@@ -128,6 +143,7 @@ export default DS.RESTAdapter.extend({
   },
 
   parseClassName(key): String {
+    console.debug('parseClass name:', Ember.String.capitalize(key))
     return Ember.String.capitalize(key);
   },
 
@@ -174,6 +190,7 @@ export default DS.RESTAdapter.extend({
    *     });
    */
   findQuery(store, type, query) {
+    console.debug('query', JSON.stringify([store, type, query]))
     let adapter: DS.RESTAdapter = this
     if (query.where && 'string' !== Ember.typeOf(query.where)) {
       query.where = JSON.stringify(query.where);
@@ -182,7 +199,38 @@ export default DS.RESTAdapter.extend({
     // Pass to _super()
     //@ts-ignore
     return adapter._super(store, type, query);
+  },
+
+  findRecord: function(store, type, id, snapshot){
+    console.debug('find record:', type.modelName, ':', id)
+    let adapter: DS.RESTAdapter = this
+    let url = adapter.buildURL(type.modelName, id)
+    console.debug('find record url:', url)
+    return new RSVP.Promise((resolve)=>{
+      adapter
+        .ajax(url, "GET")
+        .then((data) => {
+          let formated = {}
+          formated[url] = data
+          resolve(formated)
+        })
+      }
+    )
+  },
+
+  findAll: function(store, type, sinceToken, snapshotRecordArray) {
+    console.debug('find all:', type.modelName)
+    let adapter: DS.RESTAdapter = this
+    let url = adapter.buildURL(type.modelName)
+    return new RSVP.Promise((resolve)=>{
+      adapter
+        .ajax(url, "GET")
+        .then((data) => {
+          let formated = {}
+          formated[url] = data
+          resolve(formated)
+        })
+      }
+    )
   }
 })
-
-export { default as AdapterRegistry } from 'ember-data/types/registries/adapter'

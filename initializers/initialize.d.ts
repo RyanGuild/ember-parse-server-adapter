@@ -2,4 +2,4 @@
 @module initializers
 @class  initialize
 */
-export default function (container: any, app: any): void;
+export default function (container: any): void;

@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import DS from 'ember-data';
+import Model from 'ember-data/model'
 import {
   dasherize,
   capitalize,
@@ -23,6 +24,7 @@ export default DS.RESTSerializer.extend({
   primaryKey: 'objectId',
 
   extractArray: function (store, primaryType, payload) {
+    console.debug('extract array:', JSON.stringify([primaryType, payload]))
     var namespacedPayload = {};
     namespacedPayload[pluralize(primaryType.typeKey)] = payload.results;
 
@@ -30,6 +32,7 @@ export default DS.RESTSerializer.extend({
   },
 
   extractSingle: function (store, primaryType, payload, recordId) {
+    console.debug('extract single:', JSON.stringify([primaryType, payload, recordId]))
     var namespacedPayload = {};
     namespacedPayload[primaryType.typeKey] = payload; // this.normalize(primaryType, payload);
 
@@ -37,6 +40,7 @@ export default DS.RESTSerializer.extend({
   },
 
   typeForRoot: function (key) {
+    console.debug('type for root', dasherize(singularize(key)))
     return dasherize(singularize(key));
   },
 
@@ -46,11 +50,49 @@ export default DS.RESTSerializer.extend({
    * record ID we are dealing with (using the primaryKey).
    */
   extract: function (store, type, payload, id, requestType) {
+    console.log('extract:', JSON.stringify([type, payload, id, requestType]))
     if (id !== null && ('updateRecord' === requestType || 'deleteRecord' === requestType)) {
-      payload[this.get('primaryKey')] = id;
+      payload[this.primaryKey] = id;
     }
-
     return this._super(store, type, payload, id, requestType);
+  },
+
+  extractRelationships: function(relationshipModelName, relationshipHash, relationshipOptions) {
+    console.log('extract relationships:', relationshipModelName.modelName)
+    let pointers = Object
+      .entries(relationshipHash)
+      .filter(([key, value]) => (value != null))
+      .filter(([key, value]) => value['__type'] == 'Pointer')
+
+    let userPointers :Array<any> = pointers
+      .filter(([key, value]) => value['className'] == '_User')
+      .map(([key, value]) => ([
+        key,
+        {
+          type: 'parse-user',
+          id: value[this.get('primaryKey')]
+        }
+      ]))
+
+    let objectPointers :Array<any> = pointers
+      .filter(([key, value]) => (value['className'] as string) != '_User')
+      .map(([key, value]) => ([
+        key,
+        {
+          type: (value['className'] as string).toLowerCase(),
+          id: value[this.get('primaryKey')]
+        }
+      ]))
+
+    let relationships = {}
+
+    userPointers
+      .concat(objectPointers)
+      .forEach(([key, value]) => {
+        relationships[key] = value
+      })
+    console.debug('relationships:', JSON.stringify(relationships))
+    return relationships
   },
 
   /**
@@ -58,6 +100,7 @@ export default DS.RESTSerializer.extend({
    * of records in Parse if you're using skip and limit.
    */
   extractMeta: function (store, type, payload) {
+    console.debug('extract meta:',type.modelName)
     if (payload && payload.count) {
       store.setMetadataFor(type, {
         count: payload.count
@@ -66,11 +109,24 @@ export default DS.RESTSerializer.extend({
     }
   },
 
+
+  extractId: function (modelClass: Model, resourceHash: any): string | number{
+    if(resourceHash.hasOwnProperty('id')){
+      console.debug('extract id:',resourceHash['id'])
+      return resourceHash['id']
+    }else {
+      console.debug('extract id',resourceHash[this.get('primaryKey')])
+      return resourceHash[this.get('primaryKey')]
+    }
+    
+  },
+
   /**
    * Special handling for the Date objects inside the properties of
    * Parse responses.
    */
   normalizeAttributes: function (type, hash) {
+    console.log('normalize attributes:', JSON.stringify([type, hash]))
     type.eachAttribute(function (key, meta) {
       //@ts-ignore
       if ('date' === meta.type && 'object' === typeOf(hash[key]) && hash[key].iso) {
@@ -87,6 +143,7 @@ export default DS.RESTSerializer.extend({
    * side of the "hasMany".
    */
   normalizeRelationships: function (type, hash) {
+    console.debug('normalize relationships:', JSON.stringify([type, hash]))
     var store = this.get('store'),
       serializer = this;
 
@@ -154,6 +211,7 @@ export default DS.RESTSerializer.extend({
   },
 
   serializeIntoHash: function (hash, type, snapshot, options) {
+    console.log(snapshot.modelName)
     merge(hash, this.serialize(snapshot, options));
   },
 
@@ -167,11 +225,13 @@ export default DS.RESTSerializer.extend({
       delete json[key];
 
     } else {
+      console.log('serializing attribute:', key)
       this._super(snapshot, json, key, attribute);
     }
   },
 
   serializeBelongsTo: function (snapshot, json, relationship) {
+    console.debug('serialize belongs to:', JSON.stringify([json, relationship]))
     var key = relationship.key,
       belongsToId = snapshot.belongsTo(key, {
         id: true
@@ -187,6 +247,7 @@ export default DS.RESTSerializer.extend({
   },
 
   parseClassName: function (key) {
+    console.debug('parse class name:', key)
     if ('parseUser' === key) {
       return '_User';
 
@@ -196,6 +257,7 @@ export default DS.RESTSerializer.extend({
   },
 
   serializeHasMany: function (snapshot, json, relationship) {
+    console.debug('serialize has many:', JSON.stringify([json,relationship]))
     var key = relationship.key,
       hasMany = snapshot.hasMany(key),
       options = relationship.options,
@@ -266,9 +328,19 @@ export default DS.RESTSerializer.extend({
     } else {
       json[key] = [];
     }
+  },
+
+  modelNameFromPayloadKey: function(payloadKey) {
+    console.log('payload key:', payloadKey)
+    let [ ,basePath, className, _] = payloadKey.split('/') 
+    switch(basePath){
+      case 'login':
+      break;
+      case 'signup':
+      break;
+      case 'classes':
+      return className.toLowerCase()
+    }
   }
 
 });
-
-
-export { default as SerializerRegistry } from 'ember-data/types/registries/serializer'

@@ -54,5 +54,5 @@
     "types/**/*",
     "test-support/**/*",
     "addon-test-support/**/*"
-  ]
+  ], "server"
 }

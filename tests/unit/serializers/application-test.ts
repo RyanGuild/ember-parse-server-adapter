@@ -1,17 +1,25 @@
 import {
-  setupTest, 
+  setupTest,
+  only,
+  skip,
+  test
 } from 'ember-qunit';
 
+import Pretender from 'pretender'
+
 import QUnit, {
-  test,
   module
 } from 'qunit'
 import DS from 'ember-data';
 import serializer from 'dummy/serializers/application';
+import { typeOf } from '@ember/utils'
+import { run } from '@ember/runloop'
 
 import Ember from 'ember'
+import { async } from 'rsvp';
+var server :Pretender
 
-module('Unit | Adapter | application', function(hooks){
+module('Unit | Serializer | application', function(hooks){
   setupTest(hooks)
   
 
@@ -20,61 +28,46 @@ module('Unit | Adapter | application', function(hooks){
     assert.ok(serializer);
   })
 
-  test('it normalizes', function(assert){
-    assert.expect(1);
-    let store :DS.Store = this.owner.lookup('service:store');
-
-    var basicJson = {
-      id: 1,
-      testname: 'test'
-    }
-    var resultJson = {
-      data:{
-        id:'',
-        type: '',
-        attributes: {
-          testname: 'test'
-        },
-        relationships: {
-
-        }
-      }
-    }
-    //@ts-ignore
-    var model :DS.Model = DS.Model.extend({ testname: DS.attr('string') })
-
-    var serializer = this.owner.lookup('serializer:-parse')
-    var result = serializer.normalize(model, basicJson)
-    assert.deepEqual(result.data.relationships, resultJson.data.relationships);
+  test('it accepts array responses', async function(assert) {
+    let store :DS.Store = this.owner.lookup('service:store')
+    let result = await store.findAll('farm')
+    assert.ok(result)
   })
 
-  test('it converts back', function(assert){
-    assert.expect(1);
-    let store :DS.Store = this.owner.lookup('service:store');
+  test('it accepts single responses', async function(assert) {
+    let store :DS.Store = this.owner.lookup('service:store')
+    let result = await store.findRecord('farm', "gl9YhArZFM")
+    assert.ok(result)
+  })
 
-    var basicJson = {
-      id: 1,
-      testname: 'test'
-    }
-    var resultJson = {
-      data:{
-        id:'1234',
-        type: 'test',
-        attributes: {
-          testname: 'test'
-        },
-        relationships: {
+  test('it can save a record', async function(assert) {
+    let store :DS.Store = this.owner.lookup('service:store')
+    let geoTrans :DS.Transform = this.owner.lookup('transform:parse-geo-point')
+    let record :DS.Model = run(() => {
+      return store.createRecord('farm', {
+          "farmName": "Farm Fresh",
+          "locationTitle": "Uttara University English Department Sector 4, Dhaka 1230, Bangladesh",
+          "location": geoTrans.deserialize({
+              "__type": "GeoPoint",
+              "latitude": 23.865421599999998,
+              "longitude": 90.402953
+          }, {}),
+          "admin": {
+              "__type": "Pointer",
+              "className": "_User",
+              "objectId": "AJHmMs0KZ2"
+          }
+        })
+    })
 
-        }
-      }
-    }
+    console.log('record created')
 
-    //@ts-ignore
-    var model :DS.Model = DS.Model.extend({ testname: DS.attr('string') })
+    record = await record.save()
 
-    var serializer :DS.Serializer = this.owner.lookup('serializer:-parse')
-    var result = serializer.normalizeResponse(store, model, resultJson, 1234, 'get')
-    assert.deepEqual(Object.keys(result), Object.keys(basicJson))
+    console.log('record saved')
+
+    console.log(Object.entries(record))
+    assert.ok(record)
   })
 
 })
