@@ -6,7 +6,7 @@ const Farm = parseObject.extend({
   //@ts-ignore
   location: DS.attr('parse-geo-point'),
   locationTitle: DS.attr('string'),
-  stripeConnectID: DS.attr('string'),
+  stripeConnectedId: DS.attr('string'),
   sellCount: DS.attr('number'),
   //@ts-ignore
   admin: DS.belongsTo('parse-user', {async: true}),

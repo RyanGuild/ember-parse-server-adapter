@@ -36,6 +36,7 @@ export default DS.Transform.extend({
       return null;
     }
     console.log(serialized)
+
     return GeoPoint.create({
       latitude  : serialized.latitude,
       longitude : serialized.longitude
@@ -49,7 +50,9 @@ export default DS.Transform.extend({
     console.log(Object.entries(deserialized))
     return {
       __type    : 'GeoPoint',
+      //@ts-ignore
       latitude  : deserialized.get('latitude'),
+      //@ts-ignore
       longitude : deserialized.get('longitude')
     };
   }

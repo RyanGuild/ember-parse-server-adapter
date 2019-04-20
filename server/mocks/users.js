@@ -18,15 +18,21 @@ module.exports = function(app) {
     }
     res.status = 201
     res.contentType = 'application/json'
-    res.send(user)
+    res.send(user).end(201)
   });
 
   usersRouter.get('/:id', function(req, res) {
-    res.send({
-      '/users': {
-        id: req.params.id
-      }
-    });
+    const user = {
+      "username": "test",
+      "email": "test@test.test",
+      "emailVerified": false,
+      "objectId": "AJHmMs0KZ2",
+      "createdAt": "2019-04-18T01:37:30.327Z",
+      "sessionToken": "r:5dbeefe7205b2727242a3e2d93786b86"
+    }
+    res.status = 200
+    res.contentType = 'application/json'
+    res.send(user).end(200)
   });
 
   usersRouter.put('/:id', function(req, res) {
@@ -51,5 +57,5 @@ module.exports = function(app) {
   // this mock uncommenting the following line:
   //
   //app.use('/api/-users', require('body-parser').json());
-  app.use('/users/', usersRouter);
+  app.use('/parse/users', usersRouter);
 };

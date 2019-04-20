@@ -68,15 +68,21 @@ ParseUser.reopenClass({
     let serializer :DS.RESTSerializer = store.serializerFor('parse-user')
 
     return new RSVP.Promise((resolve, _) => { 
+    let newUserUrl = adapter.buildURL('parseUser')
+    console.log('new user url:', newUserUrl)
     //@ts-ignore
-    adapter.ajax(adapter.buildURL('parseUser'), 'POST', {
+    adapter.ajax(newUserUrl, 'POST', {
       data: data
     })
     .then(
       function (response) {
+        console.log('new user json response:', JSON.stringify(response))
         let merged = Object.assign({}, data, response)
+        console.log('new user:', JSON.stringify(merged))
+        let normalized = store.normalize('parse-user', merged)
+        console.log('normalized:', JSON.stringify(normalized))
         //@ts-ignore
-        let record = store.push(store.normalize('parse-user', merged))
+        let record = store.push(normalized)
         resolve(record)
       })
     .catch(

@@ -5,18 +5,21 @@ import FileTransform from '../transforms/file'
 import GeopointTransform from '../transforms/geopoint'
 import ParseUser from '../models/parse-user'
 import DS from 'ember-data'
-import config from '../config/enviroment'
+import config from 'ember-get-config'
 
-let ENV = config('development')
+let ENV = config
 
 /**
 @module initializers
 @class  initialize
 */
-export default function (container) {
+export default function (container, app) {
 
-  let configuredAdapter = Adapter.extend({
-    host: ENV.APP.parseUrl,
+  ENV = config
+
+  let configuredAdapter = Adapter.reopenClass({
+    host: ENV.APP.parseUrl || 'test',
+    namespace: ENV.APP.parseNamespace,
     'headers.X-Parse-Application-Id': ENV.APP.applicationID,
     'headers.X-Parse-REST-API-Key': ENV.APP.restApiID
   })

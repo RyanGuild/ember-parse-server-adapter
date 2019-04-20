@@ -18,8 +18,10 @@ module.exports = function(environment) {
     },
 
     APP: {
-      // Here you can pass flags/options to your application instance
-      // when it is created
+      parseUrl: 'http://localhost:1337',
+      parseNamespace: 'parse',
+      applicationId: '3f5db4fb851d3ad146476ab003de0f89FARM',
+      restApiId: '3f5db4fb851d3ad146476ab003de0f89'
     }
   };
 
@@ -29,9 +31,21 @@ module.exports = function(environment) {
     // ENV.APP.LOG_TRANSITIONS = true;
     // ENV.APP.LOG_TRANSITIONS_INTERNAL = true;
     // ENV.APP.LOG_VIEW_LOOKUPS = true;
+    ENV.APP = {
+      parseUrl: 'http://localhost:1337',
+      parseNamespace: 'parse',
+      applicationId: '3f5db4fb851d3ad146476ab003de0f89FARM',
+      restApiId: '3f5db4fb851d3ad146476ab003de0f89'
+    }
   }
 
   if (environment === 'test') {
+    ENV.APP = {
+      parseUrl: 'http://localhost:1337',
+      parseNamespace: 'parse',
+      applicationId: '3f5db4fb851d3ad146476ab003de0f89FARM',
+      restApiId: '3f5db4fb851d3ad146476ab003de0f89'
+    }
     // Testem prefers this...
     ENV.locationType = 'none';
 

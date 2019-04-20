@@ -11,13 +11,7 @@ import QUnit, {
   module
 } from 'qunit'
 import DS from 'ember-data';
-import serializer from 'dummy/serializers/application';
-import { typeOf } from '@ember/utils'
 import { run } from '@ember/runloop'
-
-import Ember from 'ember'
-import { async } from 'rsvp';
-var server :Pretender
 
 module('Unit | Serializer | application', function(hooks){
   setupTest(hooks)
@@ -36,7 +30,7 @@ module('Unit | Serializer | application', function(hooks){
 
   test('it accepts single responses', async function(assert) {
     let store :DS.Store = this.owner.lookup('service:store')
-    let result = await store.findRecord('farm', "gl9YhArZFM")
+    let result = await store.findRecord('farm', "vDR96Ftn2T")
     assert.ok(result)
   })
 
@@ -61,13 +55,14 @@ module('Unit | Serializer | application', function(hooks){
     })
 
     console.log('record created')
-
-    record = await record.save()
-
+    console.log('created record:',JSON.stringify(record.toJSON()), null, '\t')
+    await run(async () => {
+      await record.save()
+    })
+    console.log('saved record:',JSON.stringify(record.toJSON()), null, '\t')
     console.log('record saved')
+    assert.equal(record.get('hasDirtyAttributes'), false)
 
-    console.log(Object.entries(record))
-    assert.ok(record)
   })
 
 })
