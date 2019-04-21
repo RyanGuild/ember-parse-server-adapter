@@ -6,7 +6,8 @@ export function initialize() {
     if (config.environment === 'test') {
       return;
     } else {
-      next(message, options);
+      //@ts-ignore
+      next();
     }
   });
 }

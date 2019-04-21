@@ -319,7 +319,9 @@ export default DS.RESTSerializer.extend({
     let returnData = {
       data: []
     }
-    let normalized = payload[payloadKey]["results"].map(item => {
+
+
+    payload[payloadKey]["results"].map(item => {
       console.log('data array entry', JSON.stringify(item))
       let entry = this.normalize(model, item)
       console.log('normalized array entry', JSON.stringify(entry))
@@ -338,13 +340,15 @@ export default DS.RESTSerializer.extend({
     console.log('basepath:', basePath, " | classname:", className.toLowerCase())
     switch(basePath){
       case 'users':
-      return 'parse-user'
+        return 'parse-user'
       case 'login':
-      break;
+        return 'parse-user'
       case 'signup':
-      break;
+        return 'parse-user'
       case 'classes':
-      return className.toLowerCase()
+        return className.toLowerCase()
+      default:
+        return
     }
   }
 
