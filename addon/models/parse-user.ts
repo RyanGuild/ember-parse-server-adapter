@@ -7,6 +7,8 @@ import {
 } from '@ember/utils'
 import Ember from 'ember'
 import Mixin from '@ember/object/mixin';
+import {debug} from '@ember/debug'
+import {typeOf} from '@ember/utils'
 
 
 var ParseUser = DS.Model.extend(
@@ -60,37 +62,39 @@ ParseUser.reopenClass({
     );
   },
 
-  signup: function (store :DS.Store, data: {username: string, email: string, password: string}): RSVP.Promise<DS.Model | any[]> {
-    let model :DS.Model = this
-    //@ts-ignore
-    let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
-    //@ts-ignore
-    let serializer :DS.RESTSerializer = store.serializerFor('parse-user')
+  signup: function (store :DS.Store,data: {username: string,email: string,password: string}): RSVP.Promise<DS.Model | any[]> 
+    {
+      let model :DS.Model = this
+      //@ts-ignore
+      let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
+      debug(typeOf(adapter))
+      //@ts-ignore
+      let serializer :DS.RESTSerializer = store.serializerFor('parse-user')
 
-    return new RSVP.Promise((resolve, _) => { 
-    let newUserUrl = adapter.buildURL('parseUser')
-    console.log('new user url:', newUserUrl)
-    //@ts-ignore
-    adapter.ajax(newUserUrl, 'POST', {
-      data: data
-    })
-    .then(
-      function (response) {
-        console.log('new user json response:', JSON.stringify(response))
-        let merged = Object.assign({}, data, response)
-        console.log('new user:', JSON.stringify(merged))
-        let normalized = store.normalize('parse-user', merged)
-        console.log('normalized:', JSON.stringify(normalized))
-        //@ts-ignore
-        let record = store.push(normalized)
-        resolve(record)
+      return new RSVP.Promise((resolve, _) => { 
+      let newUserUrl = adapter.buildURL('parse-user')
+      console.log('new user url:', newUserUrl)
+      //@ts-ignore
+      adapter.ajax(newUserUrl, 'POST', {
+        data: data
       })
-    .catch(
-      function(e :ExceptionInformation){
-        throw `failed to create user: ${e}`
+      .then(
+        function (response) {
+          console.log('new user json response:', JSON.stringify(response))
+          let merged = Object.assign({}, data, response)
+          console.log('new user:', JSON.stringify(merged))
+          let normalized = store.normalize('parse-user', merged)
+          console.log('normalized:', JSON.stringify(normalized))
+          //@ts-ignore
+          let record = store.push(normalized)
+          resolve(record)
+        })
+      .catch(
+        function(e :ExceptionInformation){
+          throw `failed to create user: ${e}`
+        })
       })
-    })
-  }
+    }
 
 })
 
