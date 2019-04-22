@@ -23,7 +23,7 @@ var ParseUser = DS.Model.extend(
 
 ParseUser.reopenClass({
   requestPasswordReset: function (email) {
-    var adapter = this.get('store').adapterFor(this),
+    var adapter = this.get('store').adapterFor('parse-user'),
       data = {
         email: email
       };
@@ -38,9 +38,9 @@ ParseUser.reopenClass({
   },
 
   login: function (store, data) {
-    var model = this,
-      adapter = store.adapterFor(model),
-      serializer = store.serializerFor(model);
+    let model = this
+    let adapter = store.adapterFor('parse-user')
+    let serializer = store.serializerFor('parse-user')
 
     if (isEmpty(this.typeKey)) {
       throw new Error('Parse login must be called on a model fetched via store.modelFor');
