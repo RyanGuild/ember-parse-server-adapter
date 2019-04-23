@@ -36,7 +36,7 @@ export default DS.RESTSerializer.extend({
    * record ID we are dealing with (using the primaryKey).
    */
   extract: function (store, type, payload, id, requestType) {
-    console.log('extract:', JSON.stringify([type, payload, id, requestType]))
+    console.debug('extract:', JSON.stringify([type, payload, id, requestType]))
 
     if (id !== null && ('updateRecord' === requestType || 'deleteRecord' === requestType)) {
       payload[this.primaryKey] = id;
@@ -50,12 +50,12 @@ export default DS.RESTSerializer.extend({
       .filter(([key, value]) => (typeof value != 'object'))
       .forEach(([key, value]) => {attributes[key] = value})
 
-    console.log('extract attributes:', JSON.stringify(attributes))
+    console.debug('extract attributes:', JSON.stringify(attributes))
     return attributes    
   },
 
   extractRelationships: function(relationshipModelName, relationshipHash, relationshipOptions) {
-    console.log('extract relationships:', relationshipModelName.modelName)
+    console.debug('extract relationships:', relationshipModelName.modelName)
 
     let pointers = Object
       .entries(relationshipHash)
@@ -95,7 +95,7 @@ export default DS.RESTSerializer.extend({
       .forEach(([key, value]) => {
         relationships[key] = {data: value}
       })
-    console.log('relationships:', JSON.stringify(relationships))
+    console.debug('relationships:', JSON.stringify(relationships))
     return relationships
   },
 
@@ -104,7 +104,7 @@ export default DS.RESTSerializer.extend({
    * of records in Parse if you're using skip and limit.
    */
   extractMeta: function (store, type, payload) {
-    console.log('extract meta:',type.modelName)
+    console.debug('extract meta:',type.modelName)
     if (payload && payload.count) {
       store.setMetadataFor(type, {
         count: payload.count
@@ -124,7 +124,7 @@ export default DS.RESTSerializer.extend({
    * side of the "hasMany".
    */
   normalizeRelationships: function (type, hash) {
-    console.log('normalize relationships:', JSON.stringify([type, hash]))
+    console.debug('normalize relationships:', JSON.stringify([type, hash]))
     let store = this.get('store')
     let serializer = this
 
@@ -192,7 +192,7 @@ export default DS.RESTSerializer.extend({
   },
 
   serializeIntoHash: function (hash, type, snapshot, options) {
-    console.log('model serializer:',snapshot.modelName)
+    console.debug('model serializer:',snapshot.modelName)
     merge(hash, this.serialize(snapshot, options));
   },
 
@@ -206,7 +206,7 @@ export default DS.RESTSerializer.extend({
       delete json[key];
 
     } else {
-      console.log('serializing attribute:', key)
+      console.debug('serializing attribute:', key)
       this._super(snapshot, json, key, attribute);
     }
   },
@@ -312,7 +312,7 @@ export default DS.RESTSerializer.extend({
   },
 
   normalizeArrayResponse: function(store, primaryModelClass, payload, id, requestType){
-    console.log('array response', JSON.stringify(payload))
+    console.debug('array response', JSON.stringify(payload))
     let [[payloadKey, _]] = Object.entries(payload)
     let modelName = this.modelNameFromPayloadKey(payloadKey)
     let model = this.store.modelFor(modelName)
@@ -322,9 +322,9 @@ export default DS.RESTSerializer.extend({
 
 
     payload[payloadKey]["results"].map(item => {
-      console.log('data array entry', JSON.stringify(item))
+      console.debug('data array entry', JSON.stringify(item))
       let entry = this.normalize(model, item)
-      console.log('normalized array entry', JSON.stringify(entry))
+      console.debug('normalized array entry', JSON.stringify(entry))
       return entry
     }).forEach((item :{data: {}}) => {
       //@ts-ignore
@@ -335,9 +335,9 @@ export default DS.RESTSerializer.extend({
   },
 
   modelNameFromPayloadKey: function(payloadKey :string) {
-    console.log('payload key:', payloadKey)
+    console.debug('payload key:', payloadKey)
     let [,, basePath, className,] = payloadKey.split('//')[1].split('/')
-    console.log('basepath:', basePath, " | classname:", className.toLowerCase())
+    console.debug('basepath:', basePath, " | classname:", className)
     switch(basePath){
       case 'users':
         return 'parse-user'

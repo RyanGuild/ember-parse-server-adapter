@@ -67,9 +67,11 @@ ParseUser.reopenClass({
       let model :DS.Model = this
       //@ts-ignore
       let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
-      debug(typeOf(adapter))
+      
       //@ts-ignore
       let serializer :DS.RESTSerializer = store.serializerFor('parse-user')
+
+      debug(adapter.toString()+" and "+ serializer.toString())
 
       return new RSVP.Promise((resolve, _) => { 
       let newUserUrl = adapter.buildURL('parse-user')
