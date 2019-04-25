@@ -64,19 +64,21 @@ export default DS.RESTSerializer.extend({
 
     let userPointers :Array<any> = pointers
       .filter(([key, value]) => value['className'] == '_User')
+
       if(userPointers.length != 0){
-      userPointers = userPointers
-      .map(([key, value]) => ([
-        key,
-        {
-          type: 'parse-user',
-          id: value[this.get('primaryKey')]
-        }
-      ]))
-    }
+        userPointers = userPointers
+        .map(([key, value]) => ([
+          key,
+          {
+            type: 'parse-user',
+            id: value[this.get('primaryKey')]
+          }
+        ]))
+      }
 
     let objectPointers :Array<any> = pointers
       .filter(([key, value]) => (value['className'] as string) != '_User')
+      
     if(objectPointers.length != 0){
       objectPointers = objectPointers
       .map(([key, value]) => ([

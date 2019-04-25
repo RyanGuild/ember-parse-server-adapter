@@ -32,16 +32,18 @@ ParseUser.reopenClass({
 
 
   login: function (store, data) {
-    let model = this
-    let adapter = store.adapterFor('parse-user')
-    let serializer = store.serializerFor('parse-user')
+    let model :DS.Model = this
+    //@ts-ignore
+    let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
+    //@ts-ignore
+    let serializer :DS.RESTSerializer = store.serializerFor('parse-user')
 
     return new RSVP.Promise((resolve, reject) => {
       adapter.ajax(adapter.buildURL('login'), 'GET', {
         data: data
       }).then((response) => {
-        serializer.normalize(model, response);
-        var record = store.push(model, response);
+        let normalized = serializer.normalize('parse-user', response);
+        var record = store.push(normalized);
         resolve(record)
       })
       .catch((response) => reject(response.responseJSON))
@@ -65,13 +67,16 @@ ParseUser.reopenClass({
           data: data
         })
         .then((response) => {
-            let merged = Object.assign({}, data, response)
-            let normalized = store.normalize('parse-user', merged)
-            //@ts-ignore
-            let record = store.push(normalized)
-            resolve(record)
-          })
-        .catch((e) => reject(e))
+          let merged = Object.assign({}, data, response)
+          debug('response')
+          let normalized = store.normalize('parse-user', merged)
+          debug('normalized')
+          //@ts-ignore
+          let record = store.push(normalized)
+          debug('pushed to store')
+          resolve(record)
+        })
+        .catch((e) => reject(e.responseJSON))
       })
     }
 })
