@@ -42,7 +42,7 @@ ParseUser.reopenClass({
       adapter.ajax(adapter.buildURL('login'), 'GET', {
         data: data
       }).then((response) => {
-        let normalized = serializer.normalize('parse-user', response);
+        let normalized = store.normalize('parse-user', response)
         var record = store.push(normalized);
         resolve(record)
       })
