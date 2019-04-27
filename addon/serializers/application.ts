@@ -117,7 +117,8 @@ export default DS.RESTSerializer.extend({
 
 
   extractId: function (modelClass: Model, resourceHash: any): string | number{
-      return resourceHash[this.get('primaryKey')]
+      let id = resourceHash[this.get('primaryKey')] ? resourceHash[this.get('primaryKey')] : resourceHash['id']
+      return id
   },
 
   /**

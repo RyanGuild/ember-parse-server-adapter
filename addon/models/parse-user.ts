@@ -35,8 +35,6 @@ ParseUser.reopenClass({
     let model :DS.Model = this
     //@ts-ignore
     let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
-    //@ts-ignore
-    let serializer :DS.RESTSerializer = store.serializerFor('parse-user')
 
     return new RSVP.Promise((resolve, reject) => {
       adapter.ajax(adapter.buildURL('login'), 'GET', {
@@ -56,8 +54,6 @@ ParseUser.reopenClass({
       let model :DS.Model = this
       //@ts-ignore
       let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
-      //@ts-ignore
-      let serializer :DS.RESTSerializer = store.serializerFor('parse-user')
 
       return new RSVP.Promise((resolve, reject) => { 
         let newUserUrl = adapter.buildURL('parse-user')
