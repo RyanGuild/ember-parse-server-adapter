@@ -55,6 +55,7 @@ export default DS.RESTSerializer.extend({
   extractAttributes: function(modelClass, resourceHash){    
     let attributes = {}
     Object.entries((resourceHash))
+      .filter(([key, value]) => (value != null))
       .filter(([key, value]) => (typeof value != 'object' || (value as {__type: string}).__type != 'Pointer'))
       .forEach(([key, value]) => {attributes[key] = value})
     return attributes    
