@@ -31,7 +31,7 @@ import GeoPoint from '../geopoint';
  */
 export default DS.Transform.extend({
 
-  deserialize: function( serialized :{__type: "GeoPoint", latitude: number, longitude: number}) {
+  deserialize: function( serialized :any) {
     if ( !serialized ) {
       return null;
     }

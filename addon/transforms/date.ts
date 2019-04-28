@@ -23,7 +23,7 @@ export default DS.Transform.extend({
       return null;
     }
 
-    return new Date( serialized );
+    return new Date( serialized.iso );
   },
 
   serialize: function( deserialized ) {

@@ -1,5 +1,5 @@
 import DS from 'ember-data';
-import File from './file';
+import File from '../file';
 
 /*
  * The file transform handles Parse's custom data format. For
