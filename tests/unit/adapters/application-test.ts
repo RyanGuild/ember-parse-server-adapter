@@ -1,6 +1,7 @@
 import {
   test,
-  setupTest
+  setupTest,
+  only
 } from 'ember-qunit';
 
 import {
@@ -22,5 +23,9 @@ module('Unit | Adapter | application', function (hooks){
     assert.equal('-parse', adapter.defaultSerializer)
   })
 
-
+  test('it queryies', async function(assert){
+    let store = this.owner.lookup('service:store')
+    let result = store.query('farm', {where: {admin: {__type: 'Pointer', className: '_User', objectId: 'ndDOIChdxm'}}})
+    assert.ok(result)
+  })
 })

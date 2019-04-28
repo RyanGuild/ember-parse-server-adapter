@@ -20,7 +20,7 @@ module('Integration | User | login', function (hooks){
         assert.equal(currentURL(), '/test');
     })
 
-    only("it can signup a user", async function(assert){
+    test("it can signup a user", async function(assert){
         let email = `${Math.random()}@test.com`
         let username = `${Math.random()}`
         let password = `${Math.random()}`

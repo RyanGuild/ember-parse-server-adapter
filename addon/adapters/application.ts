@@ -200,21 +200,22 @@ export default DS.RESTAdapter.extend({
    *       }
    *     });
    */
-  findQuery(store, type, query) {
-    console.debug('query', JSON.stringify([store, type, query]))
+  query: function(store, type, query) {
+    console.debug('query', JSON.stringify(query))
+    console.debug('type', JSON.stringify(type.modelName))
     let adapter: DS.RESTAdapter = this
     let url = adapter.buildURL(type.modelName)
-    if (query.where && 'string' !== Ember.typeOf(query.where)) {
-      query.where = JSON.stringify(query.where);
-    }
-    let targetUrl = `&{url}/?where=${query.where}`
+    query.where = `?where=${JSON.stringify(query.where)}`
+
+    let targetUrl = `${url}/${query.where}`
+    console.debug(targetUrl)
     return new RSVP.Promise((resolve)=>{
       adapter
         .ajax(targetUrl, "GET")
         .then((data) => {
           let formated = {}
           formated[url] = data
-          console.debug("find response payload:", JSON.stringify(formated))
+          console.debug("query response payload:", JSON.stringify(formated))
           resolve(formated)
         })
     })
