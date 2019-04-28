@@ -1,5 +1,5 @@
 import DS from 'ember-data';
-import GeoPoint from './geopoint';
+import GeoPoint from '../geopoint';
 
 /*
  * The file transform handles Parse's custom GeoPoint format. For
@@ -31,7 +31,7 @@ import GeoPoint from './geopoint';
  */
 export default DS.Transform.extend({
 
-  deserialize: function( serialized :{latitude: number, longitude: number}) {
+  deserialize: function( serialized :{__type: "GeoPoint", latitude: number, longitude: number}) {
     if ( !serialized ) {
       return null;
     }
