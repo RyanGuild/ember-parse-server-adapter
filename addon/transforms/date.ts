@@ -22,8 +22,11 @@ export default DS.Transform.extend({
     if ( !serialized ) {
       return null;
     }
-
-    return new Date( serialized.iso );
+    try {
+      return Date.parse( serialized.iso );
+    } catch(e){
+      return new Date()
+    }
   },
 
   serialize: function( deserialized ) {
