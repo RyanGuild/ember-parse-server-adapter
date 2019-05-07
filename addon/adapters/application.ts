@@ -15,8 +15,8 @@ import config from 'ember-get-config'
 export default DS.RESTAdapter.extend({
   host: config.APP.parseUrl,
   namespace: config.APP.parseNamespace,
-  defaultSerializer:'-parse',
-  classesPath:'classes',
+  defaultSerializer: '-parse',
+  classesPath: 'classes',
   headers: {
     'X-Parse-Application-Id': config.APP.applicationId,
     'X-Parse-REST-API-Key': config.APP.restApiId
@@ -57,11 +57,11 @@ export default DS.RESTAdapter.extend({
    * properties onto existing data so that the record maintains
    * latest data.
    */
-  createRecord<k extends never>(store :DS.Store, type :ModelRegistry[k], record :DS.Snapshot<k>): RSVP.Promise<any> {
+  createRecord<k extends never>(store: DS.Store, type: ModelRegistry[k], record: DS.Snapshot<k>): RSVP.Promise<any> {
     console.debug('createRecord type:', record.modelName)
-    let serializer :DS.RESTSerializer = store.serializerFor(record.modelName)
+    let serializer: DS.RESTSerializer = store.serializerFor(record.modelName)
     let adapter: DS.RESTAdapter = this
-    let data :{} = serializer.serialize(record, {includeId: true});
+    let data: {} = serializer.serialize(record, { includeId: true });
     let url = adapter.buildURL(record.modelName, record.id)
     return new RSVP.Promise(
       function (resolve, reject) {
@@ -69,15 +69,15 @@ export default DS.RESTAdapter.extend({
           data: data
         }).then(
           function (json) {
-            console.debug('response json:',JSON.stringify(json))
-            let merged = Object.assign({},data, json)
+            console.debug('response json:', JSON.stringify(json))
+            let merged = Object.assign({}, data, json)
             let formated = {}
             formated[url] = merged
             console.debug('formated response:', formated)
             resolve(formated);
           },
           function (reason) {
-            console.debug('failure reason:',reason.responseJSON)
+            console.debug('failure reason:', reason.responseJSON)
             reject(reason.responseJSON);
           }
         );
@@ -90,16 +90,16 @@ export default DS.RESTAdapter.extend({
    * properties onto existing data so that the record maintains
    * latest data.
    */
-  updateRecord<k extends never>(store :DS.Store, type:ModelRegistry[k], record :DS.Snapshot<k>): RSVP.Promise<any> {
+  updateRecord<k extends never>(store: DS.Store, type: ModelRegistry[k], record: DS.Snapshot<k>): RSVP.Promise<any> {
     console.debug('updateRecord type:', type)
-    let serializer :DS.RESTSerializer = store.serializerFor(record.modelName)
+    let serializer: DS.RESTSerializer = store.serializerFor(record.modelName)
     let id = record.id
     let sendDeletes = false
     let deleteds = {}
     let adapter: DS.RESTAdapter = this
 
-    let data = serializer.serialize(record, {includeId: true});
-    
+    let data = serializer.serialize(record, { includeId: true });
+
     console.debug('data serialized for update')
     //@ts-ignore
     type.eachRelationship(function (key) {
@@ -109,8 +109,8 @@ export default DS.RESTAdapter.extend({
         sendDeletes = true;
       }
     });
-    
-    let url = adapter.buildURL(type, id)
+
+    let url = adapter.buildURL(type.modelName, id)
     return new RSVP.Promise(function (resolve, reject) {
       if (sendDeletes) {
         adapter.ajax(url, 'PUT', {
@@ -123,7 +123,7 @@ export default DS.RESTAdapter.extend({
             }).then(
               function (updates) {
                 let formated = {}
-                formated[url] = Object.assign({},data, updates)
+                formated[url] = Object.assign({}, data, updates)
                 resolve(formated);
               },
               function (reason) {
@@ -142,7 +142,7 @@ export default DS.RESTAdapter.extend({
         }).then(
           function (updates) {
             let formated = {}
-            formated[url] = Object.assign({},data, updates)
+            formated[url] = Object.assign({}, data, updates)
             resolve(formated);
           },
           function (reason) {
@@ -200,7 +200,7 @@ export default DS.RESTAdapter.extend({
    *       }
    *     });
    */
-  query: function(store, type, query) {
+  query: function (store, type, query) {
     console.debug('query', JSON.stringify(query))
     console.debug('type', JSON.stringify(type.modelName))
     let adapter: DS.RESTAdapter = this
@@ -209,7 +209,7 @@ export default DS.RESTAdapter.extend({
 
     let targetUrl = `${url}/${query.where}`
     console.debug(targetUrl)
-    return new RSVP.Promise((resolve)=>{
+    return new RSVP.Promise((resolve) => {
       adapter
         .ajax(targetUrl, "GET")
         .then((data) => {
@@ -221,12 +221,12 @@ export default DS.RESTAdapter.extend({
     })
   },
 
-  findRecord: function(store, type, id, snapshot){
+  findRecord: function (store, type, id, snapshot) {
     console.debug('find record:', type.modelName, ':', id)
     let adapter: DS.RESTAdapter = this
     let url = adapter.buildURL(type.modelName, id)
     console.debug('find record url:', url)
-    return new RSVP.Promise((resolve)=>{
+    return new RSVP.Promise((resolve) => {
       adapter
         .ajax(url, "GET")
         .then((data) => {
@@ -235,15 +235,15 @@ export default DS.RESTAdapter.extend({
           console.debug("find response payload:", JSON.stringify(formated))
           resolve(formated)
         })
-      }
+    }
     )
   },
 
-  findAll: function(store, type, sinceToken, snapshotRecordArray) {
+  findAll: function (store, type, sinceToken, snapshotRecordArray) {
     console.debug('find all:', type.modelName)
     let adapter: DS.RESTAdapter = this
     let url = adapter.buildURL(type.modelName)
-    return new RSVP.Promise((resolve)=>{
+    return new RSVP.Promise((resolve) => {
       adapter
         .ajax(url, "GET")
         .then((data) => {
@@ -251,7 +251,7 @@ export default DS.RESTAdapter.extend({
           formated[url] = data
           resolve(formated)
         })
-      }
+    }
     )
   }
 })
