@@ -110,6 +110,13 @@ export default DS.RESTAdapter.extend({
       }
     });
 
+    if (type.modelName == "parse-user") {
+      delete data['password']
+      delete data['username']
+      delete data['objectId']
+      delete data['email']
+    }
+
     let url = adapter.buildURL(type.modelName, id)
     return new RSVP.Promise(function (resolve, reject) {
       if (sendDeletes) {
