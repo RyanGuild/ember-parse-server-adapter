@@ -95,49 +95,38 @@ export default DS.RESTAdapter.extend({
     let serializer: DS.RESTSerializer = store.serializerFor(record.modelName)
     let id = record.id
     let sendDeletes = false
-    let deleteds = {}
     let adapter: DS.RESTAdapter = this
 
     let data = serializer.serialize(record, { includeId: true });
 
+    if (type.modelName == 'parse-user') {
+      delete data['username']
+      delete data['password']
+      delete data['email']
+    }
+
     let url = adapter.buildURL(type.modelName, id)
     return new RSVP.Promise(function (resolve, reject) {
-      if (sendDeletes) {
-        adapter.ajax(url, 'PUT', { data }).then(
-          function () {
-            console.debug('deletes put')
-            adapter.ajax(url, 'PUT', {
-              data: data
-            }).then(
-              function (updates) {
-                let formated = {}
-                formated[url] = Object.assign({}, data, updates)
-                resolve(formated);
-              },
-              function (reason) {
-                reject('Failed to save parent in relation: ' + reason.response.JSON);
-              }
-            );
-          },
-          function (reason) {
-            reject(reason.responseJSON);
-          }
-        );
-
-      } else {
-        adapter.ajax(url, 'PUT', {
-          data: data
-        }).then(
-          function (updates) {
-            let formated = {}
-            formated[url] = Object.assign({}, data, updates)
-            resolve(formated);
-          },
-          function (reason) {
-            reject(reason.responseJSON);
-          }
-        );
-      }
+      adapter.ajax(url, 'PUT', { data }).then(
+        function () {
+          console.debug('deletes put')
+          adapter.ajax(url, 'PUT', {
+            data: data
+          }).then(
+            function (updates) {
+              let formated = {}
+              formated[url] = Object.assign({}, data, updates)
+              resolve(formated);
+            },
+            function (reason) {
+              reject('Failed to save parent in relation: ' + reason.response.JSON);
+            }
+          );
+        },
+        function (reason) {
+          reject(reason.responseJSON);
+        }
+      );
     });
   },
 
