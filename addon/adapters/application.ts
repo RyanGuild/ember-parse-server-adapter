@@ -100,29 +100,10 @@ export default DS.RESTAdapter.extend({
 
     let data = serializer.serialize(record, { includeId: true });
 
-    console.debug('data serialized for update')
-    //@ts-ignore
-    type.eachRelationship(function (key) {
-      if (data[key] && data[key].deleteds) {
-        deleteds[key] = data[key].deleteds;
-        delete data[key].deleteds;
-        sendDeletes = true;
-      }
-    });
-
-    if (type.modelName == "parse-user") {
-      delete data['password']
-      delete data['username']
-      delete data['objectId']
-      delete data['email']
-    }
-
     let url = adapter.buildURL(type.modelName, id)
     return new RSVP.Promise(function (resolve, reject) {
       if (sendDeletes) {
-        adapter.ajax(url, 'PUT', {
-          data: deleteds
-        }).then(
+        adapter.ajax(url, 'PUT', { data }).then(
           function () {
             console.debug('deletes put')
             adapter.ajax(url, 'PUT', {
