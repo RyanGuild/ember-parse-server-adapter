@@ -211,7 +211,10 @@ export default DS.RESTSerializer.extend({
     if ('createdAt' === key ||
       'updatedAt' === key ||
       'emailVerified' === key ||
-      'sessionToken' === key
+      'sessionToken' === key ||
+      'username' === key ||
+      'password' === key ||
+      'email' === key
     ) {
       delete json[key];
 
