@@ -13,11 +13,11 @@ import {
 import {
   typeOf
 }
-from '@ember/utils'
+  from '@ember/utils'
 import {
   merge
 }
-from '@ember/polyfills'
+  from '@ember/polyfills'
 
 import config from 'ember-get-config'
 
@@ -52,16 +52,16 @@ export default DS.RESTSerializer.extend({
     return this._super(store, type, payload, id, requestType);
   },
 
-  extractAttributes: function(modelClass, resourceHash){    
+  extractAttributes: function (modelClass, resourceHash) {
     let attributes = {}
     Object.entries((resourceHash))
       .filter(([key, value]) => (value != null))
-      .filter(([key, value]) => (typeof value != 'object' || (value as {__type: string}).__type != 'Pointer'))
-      .forEach(([key, value]) => {attributes[key] = value})
-    return attributes    
+      .filter(([key, value]) => (typeof value != 'object' || (value as { __type: string }).__type != 'Pointer'))
+      .forEach(([key, value]) => { attributes[key] = value })
+    return attributes
   },
 
-  extractRelationships: function(relationshipModelName, relationshipHash, relationshipOptions) {
+  extractRelationships: function (relationshipModelName, relationshipHash, relationshipOptions) {
     console.debug('extract relationships:', relationshipModelName.modelName)
 
     let pointers = Object
@@ -69,11 +69,11 @@ export default DS.RESTSerializer.extend({
       .filter(([key, value]) => (value != null))
       .filter(([key, value]) => value['__type'] == 'Pointer')
 
-    let userPointers :Array<any> = pointers
+    let userPointers: Array<any> = pointers
       .filter(([key, value]) => value['className'] == '_User')
 
-      if(userPointers.length != 0){
-        userPointers = userPointers
+    if (userPointers.length != 0) {
+      userPointers = userPointers
         .map(([key, value]) => ([
           key,
           {
@@ -81,20 +81,20 @@ export default DS.RESTSerializer.extend({
             id: value[this.get('primaryKey')]
           }
         ]))
-      }
+    }
 
-    let objectPointers :Array<any> = pointers
+    let objectPointers: Array<any> = pointers
       .filter(([key, value]) => (value['className'] as string) != '_User')
-      
-    if(objectPointers.length != 0){
+
+    if (objectPointers.length != 0) {
       objectPointers = objectPointers
-      .map(([key, value]) => ([
-        key,
-        {
-          type: (value['className'] as string).toLowerCase(),
-          id: value[this.get('primaryKey')]
-        }
-      ]))
+        .map(([key, value]) => ([
+          key,
+          {
+            type: (value['className'] as string).toLowerCase(),
+            id: value[this.get('primaryKey')]
+          }
+        ]))
     }
 
     let relationships = {}
@@ -102,7 +102,7 @@ export default DS.RESTSerializer.extend({
     userPointers
       .concat(objectPointers)
       .forEach(([key, value]) => {
-        relationships[key] = {data: value}
+        relationships[key] = { data: value }
       })
     console.debug('relationships:', JSON.stringify(relationships))
     return relationships
@@ -113,7 +113,7 @@ export default DS.RESTSerializer.extend({
    * of records in Parse if you're using skip and limit.
    */
   extractMeta: function (store, type, payload) {
-    console.debug('extract meta:',type.modelName)
+    console.debug('extract meta:', type.modelName)
     if (payload && payload.count) {
       store.setMetadataFor(type, {
         count: payload.count
@@ -123,9 +123,9 @@ export default DS.RESTSerializer.extend({
   },
 
 
-  extractId: function (modelClass: Model, resourceHash: any): string | number{
-      let id = resourceHash[this.get('primaryKey')] ? resourceHash[this.get('primaryKey')] : resourceHash['id']
-      return id
+  extractId: function (modelClass: Model, resourceHash: any): string | number {
+    let id = resourceHash[this.get('primaryKey')] ? resourceHash[this.get('primaryKey')] : resourceHash['id']
+    return id
   },
 
   /**
@@ -202,7 +202,7 @@ export default DS.RESTSerializer.extend({
   },
 
   serializeIntoHash: function (hash, type, snapshot, options) {
-    console.debug('model serializer:',snapshot.modelName)
+    console.debug('model serializer:', snapshot.modelName)
     merge(hash, this.serialize(snapshot, options));
   },
 
@@ -239,7 +239,7 @@ export default DS.RESTSerializer.extend({
 
   parseClassName: function (key) {
     console.debug('parse class name:', key)
-    if ('parseUser' === key) {
+    if ('parseUser' === key || 'admin' === key || 'seller' === key || 'buyer' === key) {
       return '_User';
 
     } else {
@@ -248,7 +248,7 @@ export default DS.RESTSerializer.extend({
   },
 
   serializeHasMany: function (snapshot, json, relationship) {
-    console.debug('serialize has many:', JSON.stringify([json,relationship]))
+    console.debug('serialize has many:', JSON.stringify([json, relationship]))
     var key = relationship.key,
       hasMany = snapshot.hasMany(key),
       options = relationship.options,
@@ -321,7 +321,7 @@ export default DS.RESTSerializer.extend({
     }
   },
 
-  normalizeArrayResponse: function(store, primaryModelClass, payload, id, requestType){
+  normalizeArrayResponse: function (store, primaryModelClass, payload, id, requestType) {
     console.debug('array response', JSON.stringify(payload))
     let [[payloadKey, _]] = Object.entries(payload)
     let modelName = this.modelNameFromPayloadKey(payloadKey)
@@ -336,7 +336,7 @@ export default DS.RESTSerializer.extend({
       let entry = this.normalize(model, item)
       console.debug('normalized array entry', JSON.stringify(entry))
       return entry
-    }).forEach((item :{data: {}}) => {
+    }).forEach((item: { data: {} }) => {
       //@ts-ignore
       returnData.data.push(item.data)
     })
@@ -344,11 +344,11 @@ export default DS.RESTSerializer.extend({
 
   },
 
-  modelNameFromPayloadKey: function(payloadKey :string) {
+  modelNameFromPayloadKey: function (payloadKey: string) {
     console.debug('payload key:', payloadKey)
-    let [,, basePath, className,] = payloadKey.split('//')[1].split('/')
+    let [, , basePath, className,] = payloadKey.split('//')[1].split('/')
     console.debug('basepath:', basePath, " | classname:", className)
-    switch(basePath){
+    switch (basePath) {
       case 'users':
         return 'parse-user'
       case 'login':
