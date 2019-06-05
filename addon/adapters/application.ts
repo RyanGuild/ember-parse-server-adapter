@@ -99,7 +99,7 @@ export default DS.RESTAdapter.extend({
 
     let data = serializer.serialize(record, { includeId: true });
 
-    if (type.modelName == 'parse-user') {
+    if (type.modelName === 'parse-user') {
       delete data['username']
       delete data['password']
       delete data['email']
