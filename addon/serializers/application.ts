@@ -208,14 +208,16 @@ export default DS.RESTSerializer.extend({
 
   serializeAttribute: function (snapshot, json, key, attribute) {
     // These are Parse reserved properties and we won't send them.
-    if (snapshot.type === 'parse-user' &&
-    ('createdAt' === key ||
+    if (snapshot.modelName === 'parse-user' &&
+      (
+      'createdAt' === key ||
       'updatedAt' === key ||
       'emailVerified' === key ||
       'sessionToken' === key ||
       'username' === key ||
       'password' === key ||
-      'email' === key)
+      'email' === key
+      )
     ) {
       delete json[key];
 
