@@ -103,6 +103,7 @@ export default DS.RESTAdapter.extend({
       delete data['username']
       delete data['password']
       delete data['email']
+      delete data['objectId']
     }
 
     let url = adapter.buildURL(type.modelName, id)

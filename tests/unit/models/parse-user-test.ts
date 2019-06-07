@@ -30,4 +30,11 @@ module('Unit | Model | parse user', function(hooks) {
     assert.equal(model.get('email'), email)
     assert.equal(model.get('emailVerified'), undefined)
   });
+
+  test('can functions', async function(assert) {
+    let store = this.owner.lookup('service:store')
+    let userModel = store.modelFor('parse-user')
+    let result = userModel.functions(store, 'createXlsx', {sheetName: 'data', writeData: {data1:[1,2,3,4], data2:[1,2,3,4]}})
+    assert.ok(true)
+  })
 });
