@@ -14,6 +14,7 @@ import {
   typeOf
 }
   from '@ember/utils'
+  
 import {
   merge
 }
@@ -67,10 +68,10 @@ export default DS.RESTSerializer.extend({
     let pointers = Object
       .entries(relationshipHash)
       .filter(([key, value]) => (value != null))
-      .filter(([key, value]) => value['__type'] == 'Pointer')
+      .filter(([key, value]) => (value['__type'] == 'Pointer'))
 
     let userPointers: Array<any> = pointers
-      .filter(([key, value]) => value['className'] == '_User')
+      .filter(([key, value]) => (value['className'] == '_User'))
 
     if (userPointers.length != 0) {
       userPointers = userPointers
@@ -84,7 +85,7 @@ export default DS.RESTSerializer.extend({
     }
 
     let objectPointers: Array<any> = pointers
-      .filter(([key, value]) => (value['className'] as string) != '_User')
+      .filter(([key, value]) => ((value['className'] as string) != '_User'))
 
     if (objectPointers.length != 0) {
       objectPointers = objectPointers
@@ -362,7 +363,7 @@ export default DS.RESTSerializer.extend({
       case 'signup':
         return 'parse-user'
       case 'classes':
-        return className.toLowerCase()
+        return dasherize(className).toLowerCase()
       default:
         return
     }
