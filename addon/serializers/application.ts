@@ -56,7 +56,7 @@ export default DS.Serializer.extend({
         typeClass.eachRelationship((key, meta) => {
             if(!data.relationships[key]) data.relationships[key] = []
             if(hash.get(key)){
-                let entry = {id:hash.get(key).id, type: this.emberClassName(hash.className)}
+                let entry = {id:hash.get(key).id, type: this.emberClassName(key)}
                 data.relationships[key].push(entry)
             }
         })
@@ -114,7 +114,6 @@ export default DS.Serializer.extend({
             }
 
         } catch {
-                
         }
         })
         return obj
@@ -125,14 +124,14 @@ export default DS.Serializer.extend({
 
 
     parseClassName(type): String {
-        if ('parseUser' === type || 'admin' === type || 'seller' === type || 'buyer' === type) {
+        if ('parse-user' === type || 'admin' === type || 'seller' === type || 'buyer' === type) {
             return '_User';
         } else {
             return capitalize(camelize(type));
         }
     },
     emberClassName(key) {
-        let name = key === '_User' ? 'parse-user' : Ember.String.dasherize(key)
+        let name = (key === '_User' || key === 'admin' || key === 'seller' || key === 'buyer') ? 'parse-user' : dasherize(key)
         console.debug('type for root', name);
         return name
     }
