@@ -132,7 +132,8 @@ export default DS.Serializer.extend({
         }
     },
     emberClassName(key) {
-        console.debug('type for root', dasherize(key))
-        return dasherize(key);
+        let name = key === '_User' ? 'parse-user' : Ember.String.dasherize(key)
+        console.debug('type for root', name);
+        return name
     }
 })
