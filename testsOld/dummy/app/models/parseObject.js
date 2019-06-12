@@ -5,6 +5,7 @@ const ParseObject = DS.Model.extend({
   createdAt: DS.attr('parse-date'),
   //@ts-ignore
   updatedAt: DS.attr('parse-date'),
+  ACL: DS.attr('string')
 })
 
 export default ParseObject
