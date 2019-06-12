@@ -46,6 +46,7 @@ export default DS.Adapter.extend({
   },
   createRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
     console.error(store, type, snapshot)
+    //@ts-ignore
     let serializer = store.serializerFor(snapshot.modelName)
     return new RSVP.Promise(
       function (resolve, reject) {
@@ -58,6 +59,7 @@ export default DS.Adapter.extend({
   },
   updateRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
     console.error(store, type, snapshot)
+    //@ts-ignore
     let serializer = store.serializerFor(snapshot.modelName)
     return new RSVP.Promise(
       function (resolve, reject) {
@@ -86,6 +88,7 @@ export default DS.Adapter.extend({
   findAll(snapshotRecordArray :DS.SnapshotRecordArray<any>, type: DS.Model){
     return new RSVP.Promise(
       (function (resolve, reject){
+        //@ts-ignore
         let searchObject = Parse.Object.extend(this.parseClassName(type.modelName))
         let query = new Parse.Query(searchObject)
         query.find()

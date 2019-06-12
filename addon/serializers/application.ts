@@ -21,14 +21,14 @@ export default DS.Serializer.extend({
                 data: this.normalizeArrayResponse(store, primaryModelClass, payload, id, requestType),
                 meta:[]
             }
-            this.store.pushPayload(data)
+            this.store.push(data)
             return data
         } else {
             let data = {
-                data:[this.normalize(primaryModelClass, payload)],
+                data:this.normalize(primaryModelClass, payload),
                 meta:[]
             }
-            this.store.pushPayload(data)
+            this.store.push(data)
             return data
         }
     },
@@ -93,6 +93,7 @@ export default DS.Serializer.extend({
             let val = snapshot.attr(key)
             var prtType = this.get('keyMappings')[key]
             var ptr :Parse.Object = Parse.Object.extend(prtType)
+            //@ts-ignore
             var query = new Parse.Query(ptr)
             let queryPtr = await query.get()
 
@@ -118,6 +119,11 @@ export default DS.Serializer.extend({
         })
         return obj
     },
+
+
+    //================HELPERS==============================
+
+
     parseClassName(type): String {
         if ('parseUser' === type || 'admin' === type || 'seller' === type || 'buyer' === type) {
             return '_User';
