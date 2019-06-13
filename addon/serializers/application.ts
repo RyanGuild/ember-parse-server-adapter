@@ -89,11 +89,18 @@ export default DS.Serializer.extend({
         snapshot.eachAttribute(function (key, meta){
             if(key === 'location'){
                 obj.set(key, new Parse.GeoPoint(snapshot.attr('location').get('latitude'), snapshot.attr('location').get('longitude')))
-            }
-            if(key === 'profilePhoto'){
-                let file = new Parse.File(snapshot.attr(key).get())
-                file
-                obj.set(key, )
+            
+            } else if(key === 'profilePhoto'){
+                let file = new Parse.File(snapshot.attr(key).get('name'), null, snapshot.attr(key).get('type'))
+                file.url = snapshot.attr(key).get('url')
+                obj.set(key, file)
+            } else if(key === 'images'){
+                if (!obj.get(key)) obj.set(key, [])
+                obj.get(key).forEach(item => {
+                    let file = new Parse.File(snapshot.attr(key).get('name'), null, snapshot.attr(key).get('type'))
+                    file.url = snapshot.attr(key).get('url')
+                    obj.set(key, obj.get(key).push(file))
+                })
             }
             obj.set(key, snapshot.attr(key))
         })

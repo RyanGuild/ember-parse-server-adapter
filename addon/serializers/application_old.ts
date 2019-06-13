@@ -30,6 +30,8 @@ const dateTrans = DateTransforms.create()
 const fileTrans = FileTransforms.create()
 const geoTrans = GeoPointTransforms.create()
 
+import Parse from 'parse'
+
 export default DS.RESTSerializer.extend({
 
   primaryKey: 'objectId',
@@ -39,18 +41,15 @@ export default DS.RESTSerializer.extend({
     return dasherize(singularize(key));
   },
 
+
+
   /**
    * Because Parse only returns the updatedAt/createdAt values on updates
    * we have to intercept it here to assure that the adapter knows which
    * record ID we are dealing with (using the primaryKey).
    */
-  extract: function (store, type, payload, id, requestType) {
-    console.debug('extract:', JSON.stringify([type, payload, id, requestType]))
-
-    if (id !== null && ('updateRecord' === requestType || 'deleteRecord' === requestType)) {
-      payload[this.primaryKey] = id;
-    }
-    return this._super(store, type, payload, id, requestType);
+  extract: function (store, type, payload :Parse.Object , id, requestType) {
+    return this._super(store, type, payload.toJSON(), id, requestType);
   },
 
   extractAttributes: function (modelClass, resourceHash) {
@@ -229,26 +228,28 @@ export default DS.RESTSerializer.extend({
   },
 
   serializeBelongsTo: function (snapshot, json, relationship) {
-    console.debug('serialize belongs to:', JSON.stringify([json, relationship]))
-    var key = relationship.key,
-      belongsToId = snapshot.belongsTo(key, {
-        id: true
-      });
 
-    if (belongsToId) {
-      json[key] = {
-        '__type': 'Pointer',
-        'className': this.parseClassName(key),
-        'objectId': belongsToId
-      };
-    }
+    let belongsToRelation = new Parse.Relation()
+
+    //console.debug('serialize belongs to:', JSON.stringify([json, relationship]))
+    //var key = relationship.key,
+    //  belongsToId = snapshot.belongsTo(key, {
+    //    id: true
+    //  });
+    //
+    //if (belongsToId) {
+    //  json[key] = {
+    //    '__type': 'Pointer',
+    //    'className': this.parseClassName(key),
+    //    'objectId': belongsToId
+    //  };
+    //}
   },
 
   parseClassName: function (key) {
     console.debug('parse class name:', key)
     if ('parseUser' === key || 'admin' === key || 'seller' === key || 'buyer' === key) {
       return '_User';
-
     } else {
       return capitalize(camelize(key));
     }

@@ -22,6 +22,12 @@ module.exports = function(environment) {
       parseNamespace: 'parse',
       applicationId: '3f5db4fb851d3ad146476ab003de0f89FARM',
       restApiId: '3f5db4fb851d3ad146476ab003de0f89'
+      keyMappings:{
+        farm: 'Farm',
+        buyer: '_User',
+        seller: '_User',
+        admin:'_User'
+      }
     }
   };
 
