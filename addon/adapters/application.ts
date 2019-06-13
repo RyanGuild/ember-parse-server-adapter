@@ -124,7 +124,7 @@ export default DS.Adapter.extend({
                 ret()
               }
           })
-        })
+        }))
         .then(() => {
           console.debug('finished query:',query)
           query.find()
