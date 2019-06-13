@@ -55,6 +55,7 @@ export default DS.Serializer.extend({
         //@ts-ignore
         typeClass.eachAttribute((modelKey, meta) => {
             let emberAttr
+            if(hash.get(modelKey) != null && hash.get(modelKey) != undefined){
             switch(modelKey){
                 case 'location':
                     emberAttr = emberObject.create({
@@ -87,7 +88,7 @@ export default DS.Serializer.extend({
                     break;
             }
             data.attributes[modelKey] = emberAttr
-        })
+        }})
         typeClass.eachRelationship((modelKey, meta) => {
             if(!data.relationships[modelKey]) data.relationships[modelKey] = []
             if(hash.get(modelKey)){
