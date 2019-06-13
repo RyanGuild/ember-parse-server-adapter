@@ -107,9 +107,17 @@ export default DS.Adapter.extend({
         let query = new Parse.Query(searchObject)
         let queryEntries = Object.entries(queryData)
         if(queryEntries){
-          queryEntries.forEach(([key, value])=> {
+          queryEntries.forEach(async ([key, value])=> {
             console.debug('query param:', key, value)
-            query.equalTo(key, value)
+            let ptr
+            try{
+              let searchPtr = new Parse.Query(Parse.Object.extend(this.parseClassName(key)))
+              ptr = await searchPtr.get(value)
+            } catch {
+              ptr = value
+            }
+
+            query.equalTo(key, ptr)
           })
         }
         console.debug('finished query:',query)
