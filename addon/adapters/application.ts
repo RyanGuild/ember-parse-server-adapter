@@ -112,7 +112,8 @@ export default DS.Adapter.extend({
             let ptr
             try{
               let searchPtr = new Parse.Query(Parse.Object.extend(this.parseClassName(key)))
-              ptr = await searchPtr.get(value)
+              //@ts-ignore
+              ptr = await searchPtr.get(value as string)
             } catch {
               ptr = value
             }
