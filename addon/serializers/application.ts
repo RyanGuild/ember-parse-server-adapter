@@ -149,9 +149,13 @@ export default DS.Serializer.extend({
                     break;
 
                 case 'images':
-                    if (!emberObject.get(modelKey)) emberObject.set(modelKey, [])
-                    emberObject.get(modelKey).forEach(item => {
-                        let file = new Parse.File(snapshot.attr(modelKey).get('name'), null, snapshot.attr(modelKey).get('type'))
+                    if (!snapshot.attr(modelKey)) emberObject.set(modelKey, [])
+                    snapshot.attr(modelKey).toArray().forEach(item => {
+                        let file = new Parse.File(
+                            snapshot.attr(modelKey).get('name'), 
+                            null, 
+                            snapshot.attr(modelKey).get('type')
+                        )
                         file.url = snapshot.attr(modelKey).get('url')
                         emberObject.set(modelKey, emberObject.get(modelKey).push(file))
     
