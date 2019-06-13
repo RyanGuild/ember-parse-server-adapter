@@ -195,7 +195,7 @@ export default DS.Serializer.extend({
             
                 case 'hasMany':
                     if(!ParseObject.get(modelKey)) ParseObject.set(modelKey, [])
-                    eParsebject.set(modelKey, ParseObject.get(modelKey).push(queryPtr))
+                    ParseObject.set(modelKey, ParseObject.get(modelKey).push(queryPtr))
                     break
             
                 default:
