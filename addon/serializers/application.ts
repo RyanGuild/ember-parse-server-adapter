@@ -73,11 +73,11 @@ export default DS.Serializer.extend({
                     break;
 
                 case 'images':
-                    if (!emberAttr.get(modelKey)) emberAttr = A([])
-                    hash.get(modelKey).toArray().map(item => {
+                    emberAttr = A([])
+                    hash.get(modelKey).map((item :Parse.File) => {
                         return emberObject.create({
                             url: item.url,
-                            name: item.name
+                            name: item.name,
                         })
                     }).forEach(item => {
                         emberAttr.pushObject(item)
@@ -112,15 +112,15 @@ export default DS.Serializer.extend({
         let name = this.parseClassName(snapshot.modelName)
         let adapter = this.store.adapterFor(name)
         let objModel = Parse.Object.extend(name)
-        let emberObject
+        let ParseObject
 
         //RETRIEVE OBJECT
 
         if(snapshot.id && snapshot.id != null){
             let query = new Parse.Query(objModel)
-            emberObject = query.get(snapshot.id)
+            ParseObject = query.get(snapshot.id)
         } else {
-            emberObject = new objModel()
+            ParseObject = new objModel()
         }
 
         //TRANSFORM ATTRIBUTES
@@ -129,7 +129,7 @@ export default DS.Serializer.extend({
             switch(modelKey){
                 case 'location':
                     if (snapshot.attr('location'))
-                        emberObject.set(modelKey,
+                        ParseObject.set(modelKey,
                             new Parse.GeoPoint(snapshot.attr('location').get('latitude'),
                              snapshot.attr('location').get('longitude'))
                         )
@@ -143,13 +143,16 @@ export default DS.Serializer.extend({
                             snapshot.attr(modelKey).get('type')
                         )
                         file.url = snapshot.attr(modelKey).get('url')
-                        emberObject.set(modelKey, file)
+                        ParseObject.set(modelKey, file)
                     }
                     break;
 
                 case 'images':
                     try{
-                        emberObject.set(modelKey, [])
+                        if(!snapshot.attr(modelKey)) {
+                            ParseObject.set(modelKey, [])
+                            break;
+                        }
                         snapshot.attr(modelKey).toArray().forEach(item => {
                             let file = new Parse.File(
                                 item.get('name'), 
@@ -157,17 +160,17 @@ export default DS.Serializer.extend({
                                 item.get('type')
                             )
                             file.url = item.get('url')
-                            emberObject.set(modelKey, emberObject.get(modelKey).push(file))
+                            ParseObject.set(modelKey, ParseObject.get(modelKey).push(file))
                             
                         })
                     } catch (e){
                         console.error(e)
-                        break
+                        break;
                     }
                     break;
 
                 default:
-                    emberObject.set(modelKey, snapshot.attr(modelKey))
+                    ParseObject.set(modelKey, snapshot.attr(modelKey))
                     break;
 
             }
@@ -187,12 +190,12 @@ export default DS.Serializer.extend({
 
             switch (meta.kind){
                 case 'belongsTo':
-                    emberObject.set(modelKey, queryPtr)
+                    ParseObject.set(modelKey, queryPtr)
                     break;
             
                 case 'hasMany':
-                    if(!emberObject.get(modelKey)) emberObject.set(modelKey, [])
-                    emberObject.set(modelKey, emberObject.get(modelKey).push(queryPtr))
+                    if(!ParseObject.get(modelKey)) ParseObject.set(modelKey, [])
+                    eParsebject.set(modelKey, ParseObject.get(modelKey).push(queryPtr))
                     break
             
                 default:
@@ -202,7 +205,7 @@ export default DS.Serializer.extend({
         } catch {
         }
         })
-        return emberObject
+        return ParseObject
     },
 
 
