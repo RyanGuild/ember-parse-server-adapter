@@ -113,12 +113,16 @@ export default DS.Adapter.extend({
               try{
                 let searchPtr = new Parse.Query(Parse.Object.extend(this.parseClassName(key)))
                 //@ts-ignore
-                ptr = await searchPtr.get(value as string)
+                searchPtr.get(value as string)
+                  .then((searchVal) => {
+                    query.equalTo(key, searchVal)
+                    ret()
+                  })
               } catch {
                 ptr = value
+                query.equalTo(key, value)
+                ret()
               }
-              query.equalTo(key, value)
-              ret()
             })
           }))
         .then(() => {
