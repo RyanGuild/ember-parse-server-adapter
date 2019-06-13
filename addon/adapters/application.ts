@@ -36,7 +36,7 @@ export default DS.Adapter.extend({
     console.debug('find record:',store, type, id, snapshot)
     return new RSVP.Promise(
       function (resolve, reject){
-        let searchObject = Parse.Object.extend(snapshot.modelName)
+        let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
         let query = new Parse.Query(searchObject)
         query.get(id)
         .then((data) => resolve(data))
