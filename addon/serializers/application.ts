@@ -67,8 +67,8 @@ export default DS.Serializer.extend({
 
                 case 'profilePhoto':
                     emberAttr = emberObject.create({
-                        url: hash.get(modelKey).url,
-                        name: hash.get(modelKey).name
+                        url: hash.get(modelKey).url(),
+                        name: hash.get(modelKey).name()
                     })
                     break;
 
@@ -76,8 +76,8 @@ export default DS.Serializer.extend({
                     emberAttr = A([])
                     hash.get(modelKey).map((item :Parse.File) => {
                         return emberObject.create({
-                            url: item.url,
-                            name: item.name,
+                            url: item.url(),
+                            name: item.name(),
                         })
                     }).forEach(item => {
                         emberAttr.pushObject(item)
