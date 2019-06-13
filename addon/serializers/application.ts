@@ -2,9 +2,10 @@ import DS from 'ember-data'
 import Parse from 'parse'
 import {capitalize, camelize, dasherize} from '@ember/string'
 import config from 'ember-get-config'
-import {computed} from '@ember/object' 
+import {computed, default as emberObject} from '@ember/object' 
 import RSVP from 'rsvp';
 import { normalize } from 'path';
+import {A} from '@ember/array'
 
 export default DS.Serializer.extend({
     primaryKey: 'objectId',
@@ -52,14 +53,46 @@ export default DS.Serializer.extend({
         }
 
         //@ts-ignore
-        typeClass.eachAttribute((key, meta) => {
-            data.attributes[key] = hash.get(key)
+        typeClass.eachAttribute((modelKey, meta) => {
+            let emberAttr
+            switch(modelKey){
+                case 'location':
+                    emberAttr = emberObject.create({
+                        latitude: hash.get('location').get('latitude'),
+                        longitude: hash.get('location').get('longitude')
+                        })
+                    break;
+
+                case 'profilePhoto':
+                    emberAttr = emberObject.create({
+                        url: hash.get(modelKey).get('url'),
+                        name: hash.get(modelKey).get('name')
+                    })
+                    break;
+
+                case 'images':
+                    if (!emberAttr.get(modelKey)) emberAttr = A([])
+                    hash.get(modelKey).map(item => {
+                        emberObject.create({
+                            url: hash.get(modelKey).get('url'),
+                            name: hash.get(modelKey).get('name')
+                        })
+                    }).forEach(item => {
+                        emberAttr.pushObject(item)
+                    })
+                    break;
+
+                default:
+                    emberAttr = hash.get(modelKey)
+                    break;
+            }
+            data.attributes[modelKey] = emberAttr
         })
-        typeClass.eachRelationship((key, meta) => {
-            if(!data.relationships[key]) data.relationships[key] = []
-            if(hash.get(key)){
-                let entry = {id:hash.get(key).id, type: this.emberClassName(key)}
-                data.relationships[key].push(entry)
+        typeClass.eachRelationship((modelKey, meta) => {
+            if(!data.relationships[modelKey]) data.relationships[modelKey] = []
+            if(hash.get(modelKey)){
+                let entry = {id:hash.get(modelKey).id, type: this.emberClassName(modelKey)}
+                data.relationships[modelKey].push(entry)
             }
         })
         return data
@@ -77,53 +110,75 @@ export default DS.Serializer.extend({
         let name = this.parseClassName(snapshot.modelName)
         let adapter = this.store.adapterFor(name)
         let objModel = Parse.Object.extend(name)
-        let obj
+        let emberObject
 
+        //RETRIEVE OBJECT
 
         if(snapshot.id && snapshot.id != null){
             let query = new Parse.Query(objModel)
-            obj = query.get(snapshot.id)
+            emberObject = query.get(snapshot.id)
         } else {
-            obj = new objModel()
+            emberObject = new objModel()
         }
-        snapshot.eachAttribute(function (key, meta){
-            if(key === 'location'){
-                obj.set(key, new Parse.GeoPoint(snapshot.attr('location').get('latitude'), snapshot.attr('location').get('longitude')))
-            
-            } else if(key === 'profilePhoto'){
-                let file = new Parse.File(snapshot.attr(key).get('name'), null, snapshot.attr(key).get('type'))
-                file.url = snapshot.attr(key).get('url')
-                obj.set(key, file)
-            } else if(key === 'images'){
-                if (!obj.get(key)) obj.set(key, [])
-                obj.get(key).forEach(item => {
-                    let file = new Parse.File(snapshot.attr(key).get('name'), null, snapshot.attr(key).get('type'))
-                    file.url = snapshot.attr(key).get('url')
-                    obj.set(key, obj.get(key).push(file))
-                })
+
+        //TRANSFORM ATTRIBUTES
+
+        snapshot.eachAttribute(function (modelKey, meta){
+            switch(modelKey){
+                case 'location':
+                    emberObject.set(modelKey,
+                        new Parse.GeoPoint(snapshot.attr('location').get('latitude'),
+                         snapshot.attr('location').get('longitude'))
+                    )
+                    break;
+
+                case 'profilePhoto':
+                    let file = new Parse.File(
+                        snapshot.attr(modelKey).get('name'),
+                        null,
+                        snapshot.attr(modelKey).get('type')
+                    )
+                    file.url = snapshot.attr(modelKey).get('url')
+                    emberObject.set(modelKey, file)
+                    break;
+
+                case 'images':
+                    if (!emberObject.get(modelKey)) emberObject.set(modelKey, [])
+                    emberObject.get(modelKey).forEach(item => {
+                        let file = new Parse.File(snapshot.attr(modelKey).get('name'), null, snapshot.attr(modelKey).get('type'))
+                        file.url = snapshot.attr(modelKey).get('url')
+                        emberObject.set(modelKey, emberObject.get(modelKey).push(file))
+    
+                    })
+                    break;
+
+                default:
+                    emberObject.set(modelKey, snapshot.attr(modelKey))
+                    break;
+
             }
-            obj.set(key, snapshot.attr(key))
         })
+
+        // TRANSFORM RELATIONSHIPS
+
         //@ts-ignore
-        snapshot.eachRelationship(async (key, meta) => {
+        snapshot.eachRelationship(async (modelKey, meta) => {
+
         try{
-            let val = snapshot.attr(key)
-            var prtType = this.get('keyMappings')[key]
+            var prtType = this.get('keyMappings')[modelKey]
             var ptr :Parse.Object = Parse.Object.extend(prtType)
             //@ts-ignore
             var query = new Parse.Query(ptr)
             let queryPtr = await query.get()
 
-
-            console.warn(queryPtr)
             switch (meta.kind){
                 case 'belongsTo':
-                    obj.set(key, queryPtr)
+                    emberObject.set(modelKey, queryPtr)
                     break;
             
                 case 'hasMany':
-                    if(!obj.get(key)) obj.set(key, [])
-                    obj.set(key, obj.get(key).push(queryPtr))
+                    if(!emberObject.get(modelKey)) emberObject.set(modelKey, [])
+                    emberObject.set(modelKey, emberObject.get(modelKey).push(queryPtr))
                     break
             
                 default:
@@ -133,7 +188,7 @@ export default DS.Serializer.extend({
         } catch {
         }
         })
-        return obj
+        return emberObject
     },
 
 
@@ -147,8 +202,8 @@ export default DS.Serializer.extend({
             return capitalize(camelize(type));
         }
     },
-    emberClassName(key) {
-        let name = (key === '_User' || key === 'admin' || key === 'seller' || key === 'buyer') ? 'parse-user' : dasherize(key)
+    emberClassName(modelKey) {
+        let name = (modelKey === '_User' || modelKey === 'admin' || modelKey === 'seller' || modelKey === 'buyer') ? 'parse-user' : dasherize(modelKey)
         console.debug('type for root', name);
         return name
     }
