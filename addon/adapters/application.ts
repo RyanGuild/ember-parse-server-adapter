@@ -110,21 +110,21 @@ export default DS.Adapter.extend({
             console.debug('query param:', key, value)
             return new RSVP.Promise((ret,_) => {
               let ptr
-              try{
-                let searchPtr = new Parse.Query(Parse.Object.extend(this.parseClassName(key)))
+              if(key[0] === '$'){
+                let searchPtr = new Parse.Query(Parse.Object.extend(this.parseClassName(key.slice(1))))
                 //@ts-ignore
                 searchPtr.get(value as string)
                   .then((searchVal) => {
                     query.equalTo(key, searchVal)
                     ret()
                   })
-              } catch {
+              } else {
                 ptr = value
                 query.equalTo(key, value)
                 ret()
               }
-            })
-          }))
+          })
+        })
         .then(() => {
           console.debug('finished query:',query)
           query.find()
