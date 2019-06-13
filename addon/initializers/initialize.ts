@@ -1,5 +1,5 @@
 import Adapter from '../adapters/application'
-import Serializer from '../serializers/application_old'
+import Serializer from '../serializers/application'
 import DateTransform from '../transforms/date'
 import FileTransform from '../transforms/file'
 import GeopointTransform from '../transforms/geopoint'

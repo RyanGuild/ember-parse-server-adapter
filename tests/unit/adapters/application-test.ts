@@ -83,4 +83,25 @@ module('Unit | Adapter | application', function (hooks){
     assert.equal(Parse.applicationId, config.APP.applicationId)
     assert.equal(Parse.javaScriptKey, config.APP.restAPIKey)
   })
+
+  test('it queries', async function(assert){
+    Parse.initialize(config.APP.applicationId, config.APP.restApiId)
+    Parse.serverURL = `${config.APP.parseUrl}/${config.APP.parseNamespace}`
+    console.log('logging in')
+    await Parse.User.logIn("Rguildfarm6", "PIP-insGr8Xp",{})
+
+    let store = this.owner.lookup('service:store')
+    let data
+    console.log('querying')
+    try{ 
+      data = await store.query('farm', {admin: "5P1ocnCcZA"})
+      console.log('query returned:', data)
+    } catch (e){
+      console.error('query error:',e)
+    }
+    
+
+    console.log(data)
+    assert.ok(data)
+  })
 })

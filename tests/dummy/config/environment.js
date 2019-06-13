@@ -21,7 +21,7 @@ module.exports = function(environment) {
       parseUrl: 'http://localhost:1337',
       parseNamespace: 'parse',
       applicationId: '3f5db4fb851d3ad146476ab003de0f89FARM',
-      restApiId: '3f5db4fb851d3ad146476ab003de0f89'
+      restApiId: '3f5db4fb851d3ad146476ab003de0f89',
       keyMappings:{
         farm: 'Farm',
         buyer: '_User',
@@ -50,7 +50,13 @@ module.exports = function(environment) {
       parseUrl: 'http://localhost:1337',
       parseNamespace: 'parse',
       applicationId: '3f5db4fb851d3ad146476ab003de0f89FARM',
-      restApiId: '3f5db4fb851d3ad146476ab003de0f89'
+      restApiId: '3f5db4fb851d3ad146476ab003de0f89',
+      keyMappings:{
+        farm: 'Farm',
+        buyer: '_User',
+        seller: '_User',
+        admin:'_User'
+      }
     }
     // Testem prefers this...
     ENV.locationType = 'none';

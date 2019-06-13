@@ -33,6 +33,7 @@ export default DS.Adapter.extend({
   },
 
   findRecord(store:DS.Store, type:DS.Model, id:string, snapshot: DS.Snapshot){
+    console.debug('find record:',store, type, id, snapshot)
     return new RSVP.Promise(
       function (resolve, reject){
         let searchObject = Parse.Object.extend(snapshot.modelName)
@@ -45,7 +46,7 @@ export default DS.Adapter.extend({
     
   },
   createRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
-    console.error(store, type, snapshot)
+    console.debug('create record:',store, type, snapshot)
     //@ts-ignore
     let serializer = store.serializerFor(snapshot.modelName)
     return new RSVP.Promise(
@@ -58,7 +59,7 @@ export default DS.Adapter.extend({
     )
   },
   updateRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
-    console.error(store, type, snapshot)
+    console.debug('update record:',store, type, snapshot)
     //@ts-ignore
     let serializer = store.serializerFor(snapshot.modelName)
     return new RSVP.Promise(
@@ -71,6 +72,7 @@ export default DS.Adapter.extend({
     )
   },
   deleteRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
+    console.debug('create delete:',store, type, snapshot)
     return new RSVP.Promise(
       function (resolve, reject){
         let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
@@ -97,8 +99,27 @@ export default DS.Adapter.extend({
       }).bind(this)
     )
   },
-  query(){
-
+  query(store :DS.Store, type :DS.Model, queryData :any, recordArray :DS.AdapterPopulatedRecordArray<any>){
+    return new RSVP.Promise(
+      (function (resolve, reject){
+        //@ts-ignore
+        let searchObject = Parse.Object.extend(this.parseClassName(type.modelName))
+        let query = new Parse.Query(searchObject)
+        let queryEntries = Object.entries(queryData)
+        if(queryEntries){
+          queryEntries.forEach(([key, value])=> {
+            console.debug('query param:', key, value)
+            query.equalTo(key, value)
+          })
+        }
+        console.debug('finished query:',query)
+        query.find()
+        .then((data) => {
+          console.debug('query response:', data)
+          resolve(data)
+        })
+        .catch((data) => reject(data))
+      }).bind(this))
   },
   parseClassName(type): String {
     return capitalize(camelize(type))

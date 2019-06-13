@@ -17,19 +17,17 @@ export default DS.Serializer.extend({
     //================NORMALIZATION=============================
 
     normalizeResponse(store :DS.Store, primaryModelClass :DS.Model, payload :Parse.Object|Array<Parse.Object>, id :String|Number, requestType :String){
-        if(typeof payload === 'object' && payload.hasOwnProperty(0)){
+        if(Array.isArray(payload)){
             let data = {
                 data: this.normalizeArrayResponse(store, primaryModelClass, payload, id, requestType),
                 meta:[]
             }
-            this.store.push(data)
             return data
-        } else if (!!payload){
+        } else if (payload){
             let data = {
                 data:this.normalize(primaryModelClass, payload),
                 meta:[]
             }
-            this.store.push(data)
             return data
         } else{
             return null
@@ -45,6 +43,9 @@ export default DS.Serializer.extend({
 
 
     normalize(typeClass :DS.Model, hash :Parse.Object){
+        console.debug('ParseObject:', hash)
+        if(!hash) return {}
+
         console.debug('serializing:',hash)
         let data = {
             id: hash.id,
@@ -74,7 +75,7 @@ export default DS.Serializer.extend({
 
                 case 'images':
                     if (!emberAttr.get(modelKey)) emberAttr = A([])
-                    hash.get(modelKey).map(item => {
+                    hash.get(modelKey).toArray().map(item => {
                         return emberObject.create({
                             url: item.url,
                             name: item.name
@@ -128,20 +129,23 @@ export default DS.Serializer.extend({
         snapshot.eachAttribute(function (modelKey, meta){
             switch(modelKey){
                 case 'location':
-                    emberObject.set(modelKey,
-                        new Parse.GeoPoint(snapshot.attr('location').get('latitude'),
-                         snapshot.attr('location').get('longitude'))
-                    )
+                    if (snapshot.attr('location'))
+                        emberObject.set(modelKey,
+                            new Parse.GeoPoint(snapshot.attr('location').get('latitude'),
+                             snapshot.attr('location').get('longitude'))
+                        )
                     break;
 
                 case 'profilePhoto':
-                    let file = new Parse.File(
-                        snapshot.attr(modelKey).get('name'),
-                        null,
-                        snapshot.attr(modelKey).get('type')
-                    )
-                    file.url = snapshot.attr(modelKey).get('url')
-                    emberObject.set(modelKey, file)
+                    if (snapshot.attr(modelKey)){
+                        let file = new Parse.File(
+                            snapshot.attr(modelKey).get('name'),
+                            null,
+                            snapshot.attr(modelKey).get('type')
+                        )
+                        file.url = snapshot.attr(modelKey).get('url')
+                        emberObject.set(modelKey, file)
+                    }
                     break;
 
                 case 'images':
@@ -205,6 +209,7 @@ export default DS.Serializer.extend({
         }
     },
     emberClassName(modelKey) {
+        if(!modelKey) return ""
         let name = (modelKey === '_User' || modelKey === 'admin' || modelKey === 'seller' || modelKey === 'buyer') ? 'parse-user' : dasherize(modelKey)
         console.debug('type for root', name);
         return name

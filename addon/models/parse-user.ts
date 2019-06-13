@@ -32,47 +32,32 @@ ParseUser.reopenClass({
 
 
   login: function (store, data) {
-    let model :DS.Model = this
-    //@ts-ignore
-    let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
-
-    return new RSVP.Promise((resolve, reject) => {
-      adapter.ajax(adapter.buildURL('login'), 'GET', {
-        data: data
-      }).then((response) => {
-        let normalized = store.normalize('parse-user', response)
-        var record = store.push(normalized);
+    return new RSVP.Promise(async (resolve, reject) => { 
+      let {username, password, email} = data 
+      try{
+        let user = await Parse.User.logIn(username, password, {})
+        let normalized = {data: store.normalize('parse-user', user)}
+        let record = store.push(normalized)
         resolve(record)
-      })
-      .catch((response) => reject(response.responseJSON))
+      } catch(e) {
+        reject(e)
+      }
     })
   },
 
 
   signup: function (store :DS.Store,data: {username: string,email: string,password: string}): RSVP.Promise<DS.Model | any[]> 
     {
-      let model :DS.Model = this
-      //@ts-ignore
-      let adapter :DS.RESTAdapter = store.adapterFor('parse-user')
-
-      return new RSVP.Promise((resolve, reject) => { 
-        let newUserUrl = adapter.buildURL('parse-user')
-        console.log('new user url:', newUserUrl)
-        //@ts-ignore
-        adapter.ajax(newUserUrl, 'POST', {
-          data: data
-        })
-        .then((response) => {
-          let merged = Object.assign({}, data, response)
-          debug('response')
-          let normalized = store.normalize('parse-user', merged)
-          debug('normalized')
-          //@ts-ignore
+      return new RSVP.Promise(async (resolve, reject) => { 
+        let {username, password, email} = data 
+        try{
+          let user = await Parse.User.signUp(username, password, {})
+          let normalized = {data: store.normalize('parse-user', user)}
           let record = store.push(normalized)
-          debug('pushed to store')
           resolve(record)
-        })
-        .catch((e) => reject(e.responseJSON))
+        } catch(e) {
+          reject(e)
+        }
       })
     },
 
