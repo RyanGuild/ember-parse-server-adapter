@@ -131,6 +131,10 @@ export default DS.Adapter.extend({
       }).bind(this))
   },
   parseClassName(type): String {
-    return capitalize(camelize(type))
-  },
+    if ('parse-user' === type || 'admin' === type || 'seller' === type || 'buyer' === type) {
+        return '_User';
+    } else {
+        return capitalize(camelize(type));
+    }
+  }
 })
