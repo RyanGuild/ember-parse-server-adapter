@@ -45,6 +45,7 @@ export default DS.Serializer.extend({
 
 
     normalize(typeClass :DS.Model, hash :Parse.Object){
+        console.debug('serializing:',hash)
         let data = {
             id: hash.id,
             type: this.emberClassName(hash.className),
@@ -59,15 +60,15 @@ export default DS.Serializer.extend({
             switch(modelKey){
                 case 'location':
                     emberAttr = emberObject.create({
-                        latitude: hash.get('location.latitude'),
-                        longitude: hash.get('location.longitude')
+                        latitude: hash.get('location').latitude,
+                        longitude: hash.get('location').longitude
                         })
                     break;
 
                 case 'profilePhoto':
                     emberAttr = emberObject.create({
-                        url: hash.get(`${modelKey}.url`),
-                        name: hash.get(`${modelKey}.name`)
+                        url: hash.get(modelKey).url,
+                        name: hash.get(modelKey).name
                     })
                     break;
 
@@ -75,8 +76,8 @@ export default DS.Serializer.extend({
                     if (!emberAttr.get(modelKey)) emberAttr = A([])
                     hash.get(modelKey).map(item => {
                         return emberObject.create({
-                            url: hash.get(`${modelKey}.url`),
-                            name: hash.get(`${modelKey}.name`)
+                            url: item.url,
+                            name: item.name
                         })
                     }).forEach(item => {
                         emberAttr.pushObject(item)
