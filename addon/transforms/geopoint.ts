@@ -1,5 +1,6 @@
 import DS from 'ember-data';
 import GeoPoint from '../geopoint';
+import Parse from 'parse'
 
 /*
  * The file transform handles Parse's custom GeoPoint format. For
@@ -47,14 +48,8 @@ export default DS.Transform.extend({
     if (!deserialized) {
       return null;
     }
-    console.log(Object.entries(deserialized))
-    return {
-      __type    : 'GeoPoint',
-      //@ts-ignore
-      latitude  : deserialized.get('latitude'),
-      //@ts-ignore
-      longitude : deserialized.get('longitude')
-    };
+    //@ts-ignore
+    return new Parse.GeoPoint(Number.parseFloat(deserialized.get('latitude')),Number.parseFloat(deserialized.get('longitude')))
   }
 
 });

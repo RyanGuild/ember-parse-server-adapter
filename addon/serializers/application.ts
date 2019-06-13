@@ -16,20 +16,22 @@ export default DS.Serializer.extend({
     //================NORMALIZATION=============================
 
     normalizeResponse(store :DS.Store, primaryModelClass :DS.Model, payload :Parse.Object|Array<Parse.Object>, id :String|Number, requestType :String){
-        if(payload.hasOwnProperty(0)){
+        if(typeof payload === 'object' && payload.hasOwnProperty(0)){
             let data = {
                 data: this.normalizeArrayResponse(store, primaryModelClass, payload, id, requestType),
                 meta:[]
             }
             this.store.push(data)
             return data
-        } else {
+        } else if (!!payload){
             let data = {
                 data:this.normalize(primaryModelClass, payload),
                 meta:[]
             }
             this.store.push(data)
             return data
+        } else{
+            return null
         }
     },
 
@@ -85,6 +87,14 @@ export default DS.Serializer.extend({
             obj = new objModel()
         }
         snapshot.eachAttribute(function (key, meta){
+            if(key === 'location'){
+                obj.set(key, new Parse.GeoPoint(snapshot.attr('location').get('latitude'), snapshot.attr('location').get('longitude')))
+            }
+            if(key === 'profilePhoto'){
+                let file = new Parse.File(snapshot.attr(key).get())
+                file
+                obj.set(key, )
+            }
             obj.set(key, snapshot.attr(key))
         })
         //@ts-ignore
