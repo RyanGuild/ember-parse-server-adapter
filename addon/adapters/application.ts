@@ -106,28 +106,30 @@ export default DS.Adapter.extend({
         let searchObject = Parse.Object.extend(this.parseClassName(type.modelName))
         let query = new Parse.Query(searchObject)
         let queryEntries = Object.entries(queryData)
-        if(queryEntries){
-          queryEntries.forEach(async ([key, value])=> {
+        RSVP.Promise.all(queryEntries.map(async ([key, value])=> {
             console.debug('query param:', key, value)
-            let ptr
-            try{
-              let searchPtr = new Parse.Query(Parse.Object.extend(this.parseClassName(key)))
-              //@ts-ignore
-              ptr = await searchPtr.get(value as string)
-            } catch {
-              ptr = value
-            }
-
-            query.equalTo(key, ptr)
+            return new RSVP.Promise((ret,_) => {
+              let ptr
+              try{
+                let searchPtr = new Parse.Query(Parse.Object.extend(this.parseClassName(key)))
+                //@ts-ignore
+                ptr = await searchPtr.get(value as string)
+              } catch {
+                ptr = value
+              }
+              query.equalTo(key, value)
+              ret()
+            })
+          }))
+        .then(() => {
+          console.debug('finished query:',query)
+          query.find()
+          .then((data) => {
+            console.debug('query response:', data)
+            resolve(data)
           })
-        }
-        console.debug('finished query:',query)
-        query.find()
-        .then((data) => {
-          console.debug('query response:', data)
-          resolve(data)
+          .catch((data) => reject(data))
         })
-        .catch((data) => reject(data))
       }).bind(this))
   },
   parseClassName(type): String {
