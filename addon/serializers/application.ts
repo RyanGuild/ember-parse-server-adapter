@@ -4,7 +4,6 @@ import {capitalize, camelize, dasherize} from '@ember/string'
 import config from 'ember-get-config'
 import {computed, default as emberObject} from '@ember/object' 
 import RSVP from 'rsvp';
-import { normalize } from 'path';
 import {A} from '@ember/array'
 
 export default DS.Serializer.extend({
@@ -149,17 +148,22 @@ export default DS.Serializer.extend({
                     break;
 
                 case 'images':
-                    if (!snapshot.attr(modelKey)) break;
-                    snapshot.attr(modelKey).toArray().forEach(item => {
-                        let file = new Parse.File(
-                            item.get('name'), 
-                            null, 
-                            item.get('type')
-                        )
-                        file.url = item.get('url')
-                        emberObject.set(modelKey, emberObject.get(modelKey).push(file))
-    
-                    })
+                    try{
+                        emberObject.set(modelKey, [])
+                        snapshot.attr(modelKey).toArray().forEach(item => {
+                            let file = new Parse.File(
+                                item.get('name'), 
+                                null, 
+                                item.get('type')
+                            )
+                            file.url = item.get('url')
+                            emberObject.set(modelKey, emberObject.get(modelKey).push(file))
+                            
+                        })
+                    } catch (e){
+                        console.error(e)
+                        break
+                    }
                     break;
 
                 default:
