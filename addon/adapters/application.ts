@@ -115,7 +115,7 @@ export default DS.Adapter.extend({
                 //@ts-ignore
                 searchPtr.get(value as string)
                   .then((searchVal) => {
-                    query.equalTo(key, searchVal)
+                    query.equalTo(key.slice(1), searchVal)
                     ret()
                   })
               } else {
