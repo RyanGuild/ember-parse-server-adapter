@@ -94,7 +94,7 @@ module('Unit | Adapter | application', function (hooks){
     let data
     console.log('querying')
     try{ 
-      data = await store.query('farm', {admin: "5P1ocnCcZA"})
+      data = await store.query('farm', {$admin: "5P1ocnCcZA"})
       console.log('query returned:', data)
     } catch (e){
       console.error('query error:',e)
@@ -103,5 +103,29 @@ module('Unit | Adapter | application', function (hooks){
 
     console.log(data)
     assert.ok(data)
+  })
+
+  test('it creates relations', async function(assert){
+    Parse.initialize(config.APP.applicationId, config.APP.restApiId)
+    Parse.serverURL = `${config.APP.parseUrl}/${config.APP.parseNamespace}`
+    console.log('logging in')
+    let store = this.owner.lookup('service:store')
+    await Parse.User.logIn("Rguildfarm6", "PIP-insGr8Xp",{})
+
+    let user = Parse.User.current()
+    let normalized = {data: store.normalize('parse-user', user)}
+    let userRecord = store.push(normalized)
+    let farmRecord = store.createRecord('farm')
+    farmRecord.set('admin', userRecord)
+    await farmRecord.save()
+    userRecord.set('farm', farmRecord)
+    await userRecord.save()
+    let admin = await farmRecord.get('admin')
+
+    
+    console.log('userRecord:',userRecord)
+    console.log('admin:', admin)
+    assert.equal(userRecord.id, admin.id)
+
   })
 })

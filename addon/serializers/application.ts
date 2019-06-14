@@ -3,8 +3,10 @@ import Parse from 'parse'
 import {capitalize, camelize, dasherize} from '@ember/string'
 import config from 'ember-get-config'
 import {computed, default as emberObject} from '@ember/object' 
-import RSVP from 'rsvp';
+import RSVP, { async, reject } from 'rsvp';
 import {A} from '@ember/array'
+import { resolve } from 'url';
+import SyncPromise from 'sync-promise'
 
 export default DS.Serializer.extend({
     primaryKey: 'objectId',
@@ -55,6 +57,7 @@ export default DS.Serializer.extend({
 
         //@ts-ignore
         typeClass.eachAttribute((modelKey, meta) => {
+            console.debug('normalizing attr:', modelKey)
             let emberAttr
             if(hash.get(modelKey) != null && hash.get(modelKey) != undefined){
             switch(modelKey){
@@ -106,26 +109,19 @@ export default DS.Serializer.extend({
     //====================SERIALIZATION=====================
 
 
-    serialize(snapshot :DS.Snapshot, options :Object ){
-
-
+    serialize(snapshot :DS.Snapshot, options: any){
         let name = this.parseClassName(snapshot.modelName)
         let adapter = this.store.adapterFor(name)
         let objModel = Parse.Object.extend(name)
-        let ParseObject
+        var ParseObject = new objModel()
 
-        //RETRIEVE OBJECT
 
-        if(snapshot.id && snapshot.id != null){
-            let query = new Parse.Query(objModel)
-            ParseObject = query.get(snapshot.id)
-        } else {
-            ParseObject = new objModel()
-        }
+        if(options && options.includeId) ParseObject.id = snapshot.id
 
         //TRANSFORM ATTRIBUTES
 
         snapshot.eachAttribute(function (modelKey, meta){
+            console.debug('serializing attr:', modelKey)
             switch(modelKey){
                 case 'location':
                     if (snapshot.attr('location'))
@@ -175,35 +171,34 @@ export default DS.Serializer.extend({
 
             }
         })
-
         // TRANSFORM RELATIONSHIPS
-
         //@ts-ignore
-        snapshot.eachRelationship(async (modelKey, meta) => {
-
-        try{
-            var prtType = this.get('keyMappings')[modelKey]
-            var ptr :Parse.Object = Parse.Object.extend(prtType)
-            //@ts-ignore
-            var query = new Parse.Query(ptr)
-            let queryPtr = await query.get()
-
+        snapshot.eachRelationship((modelKey, meta) => {
             switch (meta.kind){
                 case 'belongsTo':
-                    ParseObject.set(modelKey, queryPtr)
+                    if(!snapshot.belongsTo(modelKey)) break;    
+                    //@ts-ignore
+                    let dataID = snapshot.belongsTo(modelKey).id
+                    let parsePointer = Parse.Object.createWithoutData(dataID)
+                    parsePointer.className = this.parseClassName(modelKey)
+                    ParseObject.set(modelKey, parsePointer)
                     break;
-            
+                    
                 case 'hasMany':
-                    if(!ParseObject.get(modelKey)) ParseObject.set(modelKey, [])
-                    ParseObject.set(modelKey, ParseObject.get(modelKey).push(queryPtr))
-                    break
-            
+                    if(!snapshot.hasMany(modelKey)) break;  
+                    let data = snapshot.hasMany(modelKey)
+                    if(!data) break;
+                    let parsePointers = data.map((entry) => {
+                        let valuePtr = Parse.Object.createWithoutData(entry.id)
+                        valuePtr.className = this.parseClassName(entry.modelName)
+                        return valuePtr
+                    })
+                    ParseObject.set(modelKey, parsePointers)
+                    break;
+    
                 default:
                     break;
             }
-
-        } catch {
-        }
         })
         return ParseObject
     },
@@ -226,3 +221,11 @@ export default DS.Serializer.extend({
         return name
     }
 })
+
+
+
+
+
+function* doAsync(fn){
+    
+}

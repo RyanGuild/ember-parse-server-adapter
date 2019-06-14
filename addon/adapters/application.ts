@@ -29,7 +29,6 @@ export default DS.Adapter.extend({
   init(){
     Parse.initialize(config.APP.applicationId, config.APP.restAPIKey)
     Parse.serverURL = `${this.get('host')}/${this.get('namespace')}`
-    console.warn(Parse.serverURL)
   },
 
   findRecord(store:DS.Store, type:DS.Model, id:string, snapshot: DS.Snapshot){
@@ -63,8 +62,8 @@ export default DS.Adapter.extend({
     //@ts-ignore
     let serializer = store.serializerFor(snapshot.modelName)
     return new RSVP.Promise(
-      function (resolve, reject) {
-        let saveObject = serializer.serialize(snapshot, {includeId: true})
+      async function (resolve, reject) {
+        let saveObject = await serializer.serialize(snapshot, {includeId: true})
         saveObject.save()
           .then((data) => resolve(data))
           .catch((data) => reject(data))
