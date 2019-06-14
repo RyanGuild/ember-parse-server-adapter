@@ -91,10 +91,17 @@ export default DS.Serializer.extend({
             data.attributes[modelKey] = emberAttr
         }})
         typeClass.eachRelationship((modelKey, meta) => {
-            if(!data.relationships[modelKey]) data.relationships[modelKey] = []
-            if(hash.get(modelKey)){
-                let entry = {id:hash.get(modelKey).id, type: this.emberClassName(modelKey)}
-                data.relationships[modelKey].push(entry)
+            switch(meta.kind){
+                case 'hasMany':
+                    if(!data.relationships[modelKey]) data.relationships[modelKey] = []
+                    if(hash.get(modelKey)){
+                        let entry = {id:hash.get(modelKey).id, type: this.emberClassName(modelKey)}
+                        data.relationships[modelKey].push(entry)
+                    }
+                    break;
+                case 'belongsTo':
+                    data.relationships[modelKey] = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
+                    break;
             }
         })
         return data
