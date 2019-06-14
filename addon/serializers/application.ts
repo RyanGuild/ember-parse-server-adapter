@@ -100,7 +100,7 @@ export default DS.Serializer.extend({
                     }
                     break;
                 case 'belongsTo':
-                    if(!(hash.get(modelKey).id === undefined || hash.get(modelKey).id === "undefined"))
+                    if(hash.get(modelKey) && !(hash.get(modelKey).id === undefined || hash.get(modelKey).id === "undefined"))
                         data.relationships[modelKey] = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
                     break;
             }
