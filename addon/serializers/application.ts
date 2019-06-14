@@ -95,13 +95,15 @@ export default DS.Serializer.extend({
                 case 'hasMany':
                     if(!data.relationships[modelKey]) data.relationships[modelKey] = []
                     if(hash.get(modelKey)){
-                        let entry = {id:hash.get(modelKey).id, type: this.emberClassName(modelKey)}
-                        data.relationships[modelKey].push(entry)
+                        hash.get(modelKey).forEach(item => { 
+                            let entry = {id:item.id, type: this.emberClassName(modelKey)}
+                            data.relationships[modelKey].push(entry)
+                        })
                     }
                     break;
                 case 'belongsTo':
-                    if(hash.get(modelKey) && !(hash.get(modelKey)[0].id === undefined || hash.get(modelKey)[0].id === "undefined"))
-                        data.relationships[modelKey] = {id: hash.get(modelKey)[0].id, type: this.emberClassName(modelKey)}
+                    if(hash.get(modelKey) && !(hash.get(modelKey)[0].id === undefined || hash.get(modelKey).id === "undefined"))
+                        data.relationships[modelKey] = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
                     break;
             }
         })
