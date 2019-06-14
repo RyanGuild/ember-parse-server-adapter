@@ -34,13 +34,13 @@ export default DS.Adapter.extend({
   findRecord(store:DS.Store, type:DS.Model, id:string, snapshot: DS.Snapshot){
     console.debug('find record:',store, type, id, snapshot)
     return new RSVP.Promise(
-      function (resolve, reject){
+      (function (resolve, reject){
         let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
         let query = new Parse.Query(searchObject)
         query.get(id)
         .then((data) => resolve(data))
         .catch((data) => reject(data))
-      }
+      }).bind(this)
     )
     
   },
@@ -73,7 +73,7 @@ export default DS.Adapter.extend({
   deleteRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
     console.debug('create delete:',store, type, snapshot)
     return new RSVP.Promise(
-      function (resolve, reject){
+      (function (resolve, reject){
         let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
         let query = new Parse.Query(searchObject)
         query.get(snapshot.id)
@@ -83,7 +83,7 @@ export default DS.Adapter.extend({
               .catch((error) => reject(error));
           })
           .catch((data) => reject(data))
-      }
+      }).bind(this)
     )
   },
   findAll(snapshotRecordArray :DS.SnapshotRecordArray<any>, type: DS.Model){
