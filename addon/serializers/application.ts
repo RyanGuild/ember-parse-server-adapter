@@ -44,10 +44,8 @@ export default DS.Serializer.extend({
 
 
     normalize(typeClass :DS.Model, hash :Parse.Object){
-        console.debug('ParseObject:', hash)
         if(!hash) return {}
 
-        console.debug('serializing:',hash)
         let data = {
             id: hash.id,
             type: this.emberClassName(hash.className),
@@ -57,7 +55,6 @@ export default DS.Serializer.extend({
 
         //@ts-ignore
         typeClass.eachAttribute((modelKey, meta) => {
-            console.debug('normalizing attr:', modelKey)
             let emberAttr
             if(hash.get(modelKey) != null && hash.get(modelKey) != undefined){
             switch(modelKey){
@@ -121,7 +118,6 @@ export default DS.Serializer.extend({
         //TRANSFORM ATTRIBUTES
 
         snapshot.eachAttribute(function (modelKey, meta){
-            console.debug('serializing attr:', modelKey)
             switch(modelKey){
                 case 'location':
                     if (snapshot.attr('location'))
@@ -217,7 +213,6 @@ export default DS.Serializer.extend({
     emberClassName(modelKey) {
         if(!modelKey) return ""
         let name = (modelKey === '_User' || modelKey === 'admin' || modelKey === 'seller' || modelKey === 'buyer') ? 'parse-user' : dasherize(modelKey)
-        console.debug('type for root', name);
         return name
     }
 })

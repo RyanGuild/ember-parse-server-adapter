@@ -32,7 +32,6 @@ export default DS.Adapter.extend({
   },
 
   findRecord(store:DS.Store, type:DS.Model, id:string, snapshot: DS.Snapshot){
-    console.debug('find record:',store, type, id, snapshot)
     return new RSVP.Promise(
       (function (resolve, reject){
         let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
@@ -45,7 +44,6 @@ export default DS.Adapter.extend({
     
   },
   createRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
-    console.debug('create record:',store, type, snapshot)
     //@ts-ignore
     let serializer = store.serializerFor(snapshot.modelName)
     return new RSVP.Promise(
@@ -58,7 +56,6 @@ export default DS.Adapter.extend({
     )
   },
   updateRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
-    console.debug('update record:',store, type, snapshot)
     //@ts-ignore
     let serializer = store.serializerFor(snapshot.modelName)
     return new RSVP.Promise(
@@ -71,7 +68,6 @@ export default DS.Adapter.extend({
     )
   },
   deleteRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
-    console.debug('create delete:',store, type, snapshot)
     return new RSVP.Promise(
       (function (resolve, reject){
         let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
@@ -106,7 +102,6 @@ export default DS.Adapter.extend({
         let query = new Parse.Query(searchObject)
         let queryEntries = Object.entries(queryData)
         RSVP.Promise.all(queryEntries.map(async ([key, value])=> {
-            console.debug('query param:', key, value)
             return new RSVP.Promise((ret,_) => {
               let ptr
               if(key[0] === '$'){
@@ -125,10 +120,8 @@ export default DS.Adapter.extend({
           })
         }))
         .then(() => {
-          console.debug('finished query:',query)
           query.find()
           .then((data) => {
-            console.debug('query response:', data)
             resolve(data)
           })
           .catch((data) => reject(data))
