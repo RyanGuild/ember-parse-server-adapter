@@ -100,7 +100,8 @@ export default DS.Serializer.extend({
                     }
                     break;
                 case 'belongsTo':
-                    data.relationships[modelKey] = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
+                    if(!hash.get(modelKey))
+                        data.relationships[modelKey] = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
                     break;
             }
         })
