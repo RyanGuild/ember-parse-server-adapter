@@ -103,7 +103,7 @@ export default DS.Serializer.extend({
                     break;
                 case 'belongsTo':
                     if(hash.get(modelKey)){
-                        let entry = [{id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}]
+                        let entry = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
                         data.relationships[modelKey] = {data: entry}
                         }
                     break;
