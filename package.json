@@ -1,6 +1,6 @@
 {
   "name": "ember-parse-server-adapter",
-  "version": "2.0.44",
+  "version": "2.0.45",
   "description": "The default blueprint for ember-cli addons.",
   "keywords": [
     "ember-addon"
