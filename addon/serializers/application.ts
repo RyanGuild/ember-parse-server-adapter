@@ -224,7 +224,14 @@ export default DS.Serializer.extend({
     },
     emberClassName(modelKey) {
         if(!modelKey) return ""
-        let name = (modelKey === '_User' || modelKey === 'admin' || modelKey === 'seller' || modelKey === 'buyer') ? 'parse-user' : dasherize(modelKey)
+        let name
+        if(modelKey === '_User' || modelKey === 'admin' || modelKey === 'seller' || modelKey === 'buyer'){
+            name = 'parse-user'
+        }else if('products'){
+            name = 'product'
+        }else {
+            name = dasherize(modelKey)
+        } 
         return name
     }
 })
