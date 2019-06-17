@@ -103,7 +103,7 @@ export default DS.Serializer.extend({
                     break;
                 case 'belongsTo':
                     if(hash.get(modelKey)){
-                        let entry = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
+                        let entry = [{id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}]
                         data.relationships[modelKey] = {data: entry}
                         }
                     break;
@@ -227,7 +227,7 @@ export default DS.Serializer.extend({
         let name
         if(modelKey === '_User' || modelKey === 'admin' || modelKey === 'seller' || modelKey === 'buyer'){
             name = 'parse-user'
-        }else if('products'){
+        }else if(modelKey === 'products'){
             name = 'product'
         }else {
             name = dasherize(modelKey)
@@ -235,11 +235,3 @@ export default DS.Serializer.extend({
         return name
     }
 })
-
-
-
-
-
-function* doAsync(fn){
-    
-}
