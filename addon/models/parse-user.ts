@@ -1,5 +1,5 @@
 import DS from 'ember-data'
-import RSVP from 'rsvp'
+import RSVP, { reject } from 'rsvp'
 import {debug} from '@ember/debug'
 
 
@@ -61,27 +61,17 @@ ParseUser.reopenClass({
       })
     },
 
-    functions: function (store :DS.Store, functionName: String, data :any){
-      //@ts-ignore
-      let adapter = store.adapterFor('parse-user')
-  
-      let parseUrl = adapter.get('host')
-      let namespace = adapter.get('namespace')
-  
-      let params = Object.entries(data)
-        .map(([key, item]) => ([key,encodeURIComponent(JSON.stringify(item))]))
-        .reduce((collector, [key, item]) => (collector += `${key}=${item}&`), '?')
-  
-      let url = `${parseUrl}/${namespace}/functions/${functionName}${params}`.slice(0,-1)
-  
-      return new RSVP.Promise((resolve, reject) => {
-        adapter.ajax(url, 'POST', data)
-          .then((response) => {
-            resolve(response)
-          })
-          .catch((response) => {
-            reject(response)
-          })
+    functions: function (store :DS.Store, functionName: string, data :any, modelName: string | undefined){
+      return new RSVP.Promise(async(resolve, reject) =>{
+        if(modelName){
+          Parse.Cloud.run(functionName, data)
+          .then((result) => resolve(store.push(store.normalize(modelName, result))))
+          .catch((error) => reject(error))
+        } else {
+          Parse.Cloud.run(functionName, data)
+          .then((result) => resolve(result))
+          .catch((error) => reject(error))
+        }
       })
     }
 })
