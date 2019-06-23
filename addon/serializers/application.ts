@@ -156,13 +156,13 @@ export default DS.Serializer.extend({
                             break;
                         }
                         if (snapshot.attr(modelKey)){
-                            snapshot.attr(modelKey).toArray().forEach(item => {
-                                let file = new Parse.File(
+                            let images = snapshot.attr(modelKey).toArray().map(item => {
+                                return new Parse.File(
                                     item.get('name').split('_')[-1],
                                     {uri: item.get('url')}
                                 )
-                                ParseObject.set(modelKey, ParseObject.get(modelKey).push(file))
                             })
+                            ParseObject.set(modelKey,images)
                         }
                     } catch (e){
                         console.error(e)
