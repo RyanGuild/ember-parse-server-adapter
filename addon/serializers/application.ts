@@ -151,7 +151,7 @@ export default DS.Serializer.extend({
 
                 case 'images':
                     try{
-                        if(!ParseObject.get(modelKey)) {
+                        if(!ParseObject.get(modelKey) || ((typeof ParseObject.get(modelKey)) != 'object')) {
                             ParseObject.set(modelKey, [])
                             break;
                         }
