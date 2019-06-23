@@ -142,7 +142,7 @@ export default DS.Serializer.extend({
                 case 'profilePhoto':
                     if (snapshot.attr(modelKey)){
                         let file = new Parse.File(
-                            snapshot.attr(modelKey).get('name'),
+                            snapshot.attr(modelKey).get('name').split('_')[-1],
                             {uri: snapshot.attr(modelKey).get('url')}
                         )
                         ParseObject.set(modelKey, file)
@@ -158,11 +158,10 @@ export default DS.Serializer.extend({
                         if (snapshot.attr(modelKey)){
                             snapshot.attr(modelKey).toArray().forEach(item => {
                                 let file = new Parse.File(
-                                    item.get('name'),
+                                    item.get('name').split('_')[-1],
                                     {uri: item.get('url')}
                                 )
                                 ParseObject.set(modelKey, ParseObject.get(modelKey).push(file))
-                            
                             })
                         }
                     } catch (e){
