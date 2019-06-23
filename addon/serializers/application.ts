@@ -155,14 +155,16 @@ export default DS.Serializer.extend({
                             ParseObject.set(modelKey, [])
                             break;
                         }
-                        snapshot.attr(modelKey).toArray().forEach(item => {
-                            let file = new Parse.File(
-                                item.get('name'),
-                                {uri: item.get('url')}
-                            )
-                            ParseObject.set(modelKey, ParseObject.get(modelKey).push(file))
+                        if (snapshot.attr(modelKey)){
+                            snapshot.attr(modelKey).toArray().forEach(item => {
+                                let file = new Parse.File(
+                                    item.get('name'),
+                                    {uri: item.get('url')}
+                                )
+                                ParseObject.set(modelKey, ParseObject.get(modelKey).push(file))
                             
-                        })
+                            })
+                        }
                     } catch (e){
                         console.error(e)
                         break;
