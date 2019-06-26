@@ -141,6 +141,7 @@ export default DS.Serializer.extend({
 
                 case 'profilePhoto':
                     if (snapshot.attr(modelKey)){
+                        console.debug(snapshot.attr(modelKey).get('filePtr'))
                         let file = new Parse.File(
                             snapshot.attr(modelKey).get('name').split('_')[-1],
                             {uri: snapshot.attr(modelKey).get('url')}
