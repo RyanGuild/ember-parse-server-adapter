@@ -3,10 +3,8 @@ import Parse from 'parse'
 import {capitalize, camelize, dasherize} from '@ember/string'
 import config from 'ember-get-config'
 import {computed, default as emberObject} from '@ember/object' 
-import RSVP, { async, reject } from 'rsvp';
+import RSVP from 'rsvp';
 import {A} from '@ember/array'
-import { resolve } from 'url';
-import SyncPromise from 'sync-promise'
 
 export default DS.Serializer.extend({
     primaryKey: 'objectId',
