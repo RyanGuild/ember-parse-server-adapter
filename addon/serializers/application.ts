@@ -66,7 +66,8 @@ export default DS.Serializer.extend({
                 case 'profilePhoto':
                     emberAttr = emberObject.create({
                         url: hash.get(modelKey).url(),
-                        name: hash.get(modelKey).name()
+                        name: hash.get(modelKey).name(),
+                        filePtr: hash.get(modelKey),
                     })
                     break;
 
@@ -76,6 +77,7 @@ export default DS.Serializer.extend({
                         return emberObject.create({
                             url: item.url(),
                             name: item.name(),
+                            filePtr: item
                         })
                     }).forEach(item => {
                         emberAttr.pushObject(item)
@@ -138,13 +140,9 @@ export default DS.Serializer.extend({
                     break;
 
                 case 'profilePhoto':
-                    if (snapshot.attr(modelKey)){
+                    if (snapshot.attr(modelKey) && snapshot.attr(modelKey).get('filePtr')){
                         console.debug(snapshot.attr(modelKey).get('filePtr'))
-                        let file = new Parse.File(
-                            snapshot.attr(modelKey).get('name').split('_')[-1],
-                            {uri: snapshot.attr(modelKey).get('url')}
-                        )
-                        ParseObject.set(modelKey, file)
+                        ParseObject.set(modelKey, snapshot.attr(modelKey).get('filePtr'))
                     }
                     break;
 
@@ -155,13 +153,10 @@ export default DS.Serializer.extend({
                             break;
                         }
                         if (snapshot.attr(modelKey)){
-                            snapshot.attr(modelKey).toArray().forEach(item => {
-                                let file = new Parse.File(
-                                    item.get('name').split('_')[-1],
-                                    {uri: item.get('url')}
-                                )
-                                ParseObject.set(modelKey, ParseObject.get(modelKey).push(file))
+                            let files = snapshot.attr(modelKey).toArray().map(item => {
+                                return item.get('filePtr')
                             })
+                            ParseObject.set(modelKey, files)
                         }
                     } catch (e){
                         console.error(e)
