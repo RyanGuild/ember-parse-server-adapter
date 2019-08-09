@@ -97,14 +97,14 @@ export default DS.Serializer.extend({
                     if(hash.get(modelKey)){
                         hash.get(modelKey).forEach(item => { 
                             let entry = {id:item.id, type: this.emberClassName(modelKey)}
-                            data.relationships[modelKey].data.push(entry)
+                            data.relationships[this.emberKeyFilters(modelKey, hash)].data.push(entry)
                         })
                     }
                     break;
                 case 'belongsTo':
                     if(hash.get(modelKey)){
                         let entry = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
-                        data.relationships[modelKey] = {data: entry}
+                        data.relationships[this.emberKeyFilters(modelKey, hash)] = {data: entry}
                         }
                     break;
             }
@@ -186,7 +186,7 @@ export default DS.Serializer.extend({
                     let dataID = snapshot.belongsTo(modelKey).id
                     let parsePointer = Parse.Object.createWithoutData(dataID)
                     parsePointer.className = this.parseClassName(modelKey)
-                    ParseObject.set(modelKey, parsePointer)
+                    ParseObject.set(this.parseKeyFilters(modelKey, snapshot), parsePointer)
                     break;
                     
                 case 'hasMany':
@@ -198,7 +198,7 @@ export default DS.Serializer.extend({
                         valuePtr.className = this.parseClassName(entry.modelName)
                         return valuePtr
                     })
-                    ParseObject.set(modelKey, parsePointers)
+                    ParseObject.set(this.parseKeyFilters(modelKey, snapshot), parsePointers)
                     break;
     
                 default:
@@ -211,11 +211,26 @@ export default DS.Serializer.extend({
 
     //================HELPERS==============================
 
+    parseKeyFilters(modelKey: string, snapshot :DS.Snapshot):String{
+        if(snapshot.modelName === 'parse-user' && modelKey === 'salePoint'){
+            return 'salePoints'
+        } else {
+            return modelKey
+        }
+    },
+
+    emberKeyFilters(modelKey:string, hash :Parse.Object){
+        if(hash.className === '_User' && modelKey === 'salePoints'){
+            return 'salePoint'
+        } else {
+            return modelKey
+        }
+    },
 
     parseClassName(type): String {
         if ('parse-user' === type || 'admin' === type || 'seller' === type || 'buyer' === type) {
             return '_User';
-        } else {
+        }else {
             return capitalize(camelize(type));
         }
     },
