@@ -3,10 +3,8 @@ import Parse from 'parse'
 import {capitalize, camelize, dasherize} from '@ember/string'
 import config from 'ember-get-config'
 import {computed, default as emberObject} from '@ember/object' 
-import RSVP, { async, reject } from 'rsvp';
+import RSVP from 'rsvp';
 import {A} from '@ember/array'
-import { resolve } from 'url';
-import SyncPromise from 'sync-promise'
 
 export default DS.Serializer.extend({
     primaryKey: 'objectId',
@@ -68,7 +66,8 @@ export default DS.Serializer.extend({
                 case 'profilePhoto':
                     emberAttr = emberObject.create({
                         url: hash.get(modelKey).url(),
-                        name: hash.get(modelKey).name()
+                        name: hash.get(modelKey).name(),
+                        filePtr: hash.get(modelKey),
                     })
                     break;
 
@@ -78,6 +77,7 @@ export default DS.Serializer.extend({
                         return emberObject.create({
                             url: item.url(),
                             name: item.name(),
+                            filePtr: item
                         })
                     }).forEach(item => {
                         emberAttr.pushObject(item)
@@ -140,12 +140,9 @@ export default DS.Serializer.extend({
                     break;
 
                 case 'profilePhoto':
-                    if (snapshot.attr(modelKey)){
-                        let file = new Parse.File(
-                            snapshot.attr(modelKey).get('name').split('_')[-1],
-                            {uri: snapshot.attr(modelKey).get('url')}
-                        )
-                        ParseObject.set(modelKey, file)
+                    if (snapshot.attr(modelKey) && snapshot.attr(modelKey).get('filePtr')){
+                        console.debug(snapshot.attr(modelKey).get('filePtr'))
+                        ParseObject.set(modelKey, snapshot.attr(modelKey).get('filePtr'))
                     }
                     break;
 
@@ -156,6 +153,7 @@ export default DS.Serializer.extend({
                             break;
                         }
                         if (snapshot.attr(modelKey)){
+<<<<<<< HEAD
                             let images = snapshot.attr(modelKey).toArray().map(item => {
                                 return new Parse.File(
                                     item.get('name').split('_')[-1],
@@ -163,6 +161,12 @@ export default DS.Serializer.extend({
                                 )
                             })
                             ParseObject.set(modelKey,images)
+=======
+                            let files = snapshot.attr(modelKey).toArray().map(item => {
+                                return item.get('filePtr')
+                            })
+                            ParseObject.set(modelKey, files)
+>>>>>>> d33cac541db38c6fa6c097f4ef90c005b3ca8015
                         }
                     } catch (e){
                         console.error(e)

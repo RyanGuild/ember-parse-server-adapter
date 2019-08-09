@@ -1,6 +1,10 @@
 {
   "name": "ember-parse-server-adapter",
+<<<<<<< HEAD
   "version": "2.0.53",
+=======
+  "version": "2.0.56",
+>>>>>>> d33cac541db38c6fa6c097f4ef90c005b3ca8015
   "description": "The default blueprint for ember-cli addons.",
   "keywords": [
     "ember-addon"
@@ -28,8 +32,7 @@
     "ember-auto-import": "^1.4.0",
     "ember-cli-babel": "^7.1.2",
     "ember-cli-typescript": "^2.0.1",
-    "parse": "^2.4.0",
-    "sync-promise": "^1.1.0"
+    "parse": "^2.4.0"
   },
   "devDependencies": {
     "@babel/register": "^7.4.0",
