@@ -37,7 +37,10 @@ export default DS.Adapter.extend({
         let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
         let query = new Parse.Query(searchObject)
         query.get(id)
-        .then((data) => resolve(data))
+        .then(async (obj) => { 
+          let data = await obj.fetch()
+          resolve(data)
+        })
         .catch((data) => reject(data))
       }).bind(this)
     )
@@ -89,7 +92,12 @@ export default DS.Adapter.extend({
         let searchObject = Parse.Object.extend(this.parseClassName(type.modelName))
         let query = new Parse.Query(searchObject)
         query.find()
-        .then((data) => resolve(data))
+        .then((objArr) => {
+          let promises = objArr.map((obj) => obj.fetch())
+          Promise
+            .all(promises)
+            .then(data => resolve(data))
+        })
         .catch((data) => reject(data))
       }).bind(this)
     )
