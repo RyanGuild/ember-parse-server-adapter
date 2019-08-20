@@ -94,16 +94,16 @@ export default DS.Serializer.extend({
             switch(meta.kind){
                 case 'hasMany':
                     if(!data.relationships[this.emberKeyFilters(modelKey, hash)]) data.relationships[this.emberKeyFilters(modelKey, hash)] = {data:[]}
-                    if(hash.get(modelKey)){
-                        hash.get(modelKey).forEach(item => { 
+                    if(hash.get(this.parseKeyFilters(modelkey, hash))){
+                        hash.get(this.parseKeyFilters(modelkey, hash)).forEach(item => { 
                             let entry = {id:item.id, type: this.emberClassName(modelKey)}
                             data.relationships[this.emberKeyFilters(modelKey, hash)].data.push(entry)
                         })
                     }
                     break;
                 case 'belongsTo':
-                    if(hash.get(modelKey)){
-                        let entry = {id: hash.get(modelKey).id, type: this.emberClassName(modelKey)}
+                    if(hash.get(this.parseKeyFilters(modelkey, hash))){
+                        let entry = {id: hash.get(this.parseKeyFilters(modelkey, hash)).id, type: this.emberClassName(modelKey)}
                         data.relationships[this.emberKeyFilters(modelKey, hash)] = {data: entry}
                         }
                     break;
@@ -175,23 +175,46 @@ export default DS.Serializer.extend({
         snapshot.eachRelationship((modelKey, meta) => {
             switch (meta.kind){
                 case 'belongsTo':
-                    if(!snapshot.belongsTo(modelKey)) break;    
+                    if(!snapshot.belongsTo(this.emberKeyFilters(modelKey, snapshot)))
+                        break;
+                    
                     //@ts-ignore
-                    let dataID = snapshot.belongsTo(modelKey).id
-                    let parsePointer = Parse.Object.createWithoutData(dataID)
+                    let dataID = snapshot
+                        .belongsTo(
+                            this.emberKeyFilters(modelKey, snapshot)
+                        ).id
+
+                    let parsePointer = Parse
+                        .Object
+                        .createWithoutData(dataID)
+
                     parsePointer.className = this.parseClassName(modelKey)
-                    ParseObject.set(this.parseKeyFilters(modelKey, snapshot), parsePointer)
+
+                    ParseObject
+                        .set(
+                            this.parseKeyFilters(modelKey, snapshot),
+                            parsePointer
+                        )
                     break;
                     
                 case 'hasMany':
-                    if(!snapshot.hasMany(modelKey)) break;  
-                    let data = snapshot.hasMany(modelKey)
-                    if(!data) break;
+                    if(!snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot))) 
+                        break;
+
+                    let data = snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot))
+
+                    if(!data) 
+                        break;
+
                     let parsePointers = data.map((entry) => {
-                        let valuePtr = Parse.Object.createWithoutData(entry.id)
+                        let valuePtr = Parse
+                            .Object
+                            .createWithoutData(entry.id)
+
                         valuePtr.className = this.parseClassName(entry.modelName)
                         return valuePtr
                     })
+                    
                     ParseObject.set(this.parseKeyFilters(modelKey, snapshot), parsePointers)
                     break;
     
