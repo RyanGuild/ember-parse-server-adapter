@@ -93,19 +93,37 @@ export default DS.Serializer.extend({
         typeClass.eachRelationship((modelKey, meta) => {
             switch(meta.kind){
                 case 'hasMany':
-                    if(!data.relationships[this.emberKeyFilters(modelKey, hash)]) data.relationships[this.emberKeyFilters(modelKey, hash)] = {data:[]}
-                    if(hash.get(this.parseKeyFilters(modelkey, hash))){
-                        hash.get(this.parseKeyFilters(modelkey, hash)).forEach(item => { 
+
+                    if(!data.relationships[this.emberKeyFilters(modelKey, hash.className)]){ 
+
+                        data.relationships[this.emberKeyFilters(modelKey, hash.className)] = {data:[]}
+
+                    }
+
+                    if(hash.get(this.parseKeyFilters(modelKey, hash.className))){
+
+                        hash.get(this.parseKeyFilters(modelKey, hash.className)).forEach(item => { 
+
                             let entry = {id:item.id, type: this.emberClassName(modelKey)}
-                            data.relationships[this.emberKeyFilters(modelKey, hash)].data.push(entry)
+                            data.relationships[this.emberKeyFilters(modelKey, hash.className)].data.push(entry)
+
                         })
                     }
                     break;
+
+                    
                 case 'belongsTo':
-                    if(hash.get(this.parseKeyFilters(modelkey, hash))){
-                        let entry = {id: hash.get(this.parseKeyFilters(modelkey, hash)).id, type: this.emberClassName(modelKey)}
-                        data.relationships[this.emberKeyFilters(modelKey, hash)] = {data: entry}
+                    if(hash.get(this.parseKeyFilters(modelKey, hash.className))){
+
+                        let entry = {
+
+                            id: hash.get(this.parseKeyFilters(modelKey, hash.className)).id,
+                            type: this.emberClassName(modelKey)
+
                         }
+
+                        data.relationships[this.emberKeyFilters(modelKey, hash.className)] = { data: entry}
+                    }
                     break;
             }
         })
@@ -133,16 +151,33 @@ export default DS.Serializer.extend({
             switch(modelKey){
                 case 'location':
                     if (snapshot.attr('location'))
-                        ParseObject.set(modelKey,
-                            new Parse.GeoPoint(snapshot.attr('location').get('latitude'),
-                             snapshot.attr('location').get('longitude'))
+                        ParseObject.set(
+                            modelKey,
+                            new Parse.GeoPoint(
+                                snapshot
+                                    .attr('location')
+                                    .get('latitude'),
+                                snapshot
+                                    .attr('location')
+                                    .get('longitude')
+                            )
                         )
                     break;
 
                 case 'profilePhoto':
                     if (snapshot.attr(modelKey) && snapshot.attr(modelKey).get('filePtr')){
-                        console.debug(snapshot.attr(modelKey).get('filePtr'))
-                        ParseObject.set(modelKey, snapshot.attr(modelKey).get('filePtr'))
+                        console.debug(
+                            snapshot
+                            .attr(modelKey)
+                            .get('filePtr')
+                        )
+
+                        ParseObject.set(
+                            modelKey,
+                            snapshot
+                                .attr(modelKey)
+                                .get('filePtr')
+                        )
                     }
                     break;
 
@@ -153,9 +188,12 @@ export default DS.Serializer.extend({
                             break;
                         }
                         if (snapshot.attr(modelKey)){
-                            let files = snapshot.attr(modelKey).toArray().map(item => {
-                                return item.get('filePtr')
-                            })
+                            let files = snapshot
+                                .attr(modelKey)
+                                .toArray()
+                                .map(item => {
+                                    return item.get('filePtr')
+                                })
                             ParseObject.set(modelKey, files)
                         }
                     } catch (e){
@@ -175,13 +213,13 @@ export default DS.Serializer.extend({
         snapshot.eachRelationship((modelKey, meta) => {
             switch (meta.kind){
                 case 'belongsTo':
-                    if(!snapshot.belongsTo(this.emberKeyFilters(modelKey, snapshot)))
+                    if(!snapshot.belongsTo(this.emberKeyFilters(modelKey, snapshot.modelName)))
                         break;
                     
                     //@ts-ignore
                     let dataID = snapshot
                         .belongsTo(
-                            this.emberKeyFilters(modelKey, snapshot)
+                            this.emberKeyFilters(modelKey, snapshot.modelName)
                         ).id
 
                     let parsePointer = Parse
@@ -192,16 +230,16 @@ export default DS.Serializer.extend({
 
                     ParseObject
                         .set(
-                            this.parseKeyFilters(modelKey, snapshot),
+                            this.parseKeyFilters(modelKey, snapshot.modelName),
                             parsePointer
                         )
                     break;
                     
                 case 'hasMany':
-                    if(!snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot))) 
+                    if(!snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot.modelName))) 
                         break;
 
-                    let data = snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot))
+                    let data = snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot.modelName))
 
                     if(!data) 
                         break;
@@ -214,8 +252,8 @@ export default DS.Serializer.extend({
                         valuePtr.className = this.parseClassName(entry.modelName)
                         return valuePtr
                     })
-                    
-                    ParseObject.set(this.parseKeyFilters(modelKey, snapshot), parsePointers)
+
+                    ParseObject.set(this.parseKeyFilters(modelKey, snapshot.modelName), parsePointers)
                     break;
     
                 default:
@@ -228,16 +266,16 @@ export default DS.Serializer.extend({
 
     //================HELPERS==============================
 
-    parseKeyFilters(modelKey: string, snapshot :DS.Snapshot):String{
-        if(snapshot.modelName === 'parse-user' && modelKey === 'salePoint'){
+    parseKeyFilters(modelKey: string, className :string):String{
+        if(className === 'parse-user' && modelKey === 'salePoint'){
             return 'salePoints'
         } else {
             return modelKey
         }
     },
 
-    emberKeyFilters(modelKey:string, hash :Parse.Object){
-        if(hash.className === '_User' && modelKey === 'salePoints'){
+    emberKeyFilters(modelKey:string, className :string){
+        if(className === '_User' && modelKey === 'salePoints'){
             return 'salePoint'
         } else {
             return modelKey
