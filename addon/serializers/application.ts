@@ -111,7 +111,7 @@ export default DS.Serializer.extend({
                     }
                     break;
 
-                    
+
                 case 'belongsTo':
                     if(hash.get(this.parseKeyFilters(modelKey, hash.className))){
 
@@ -138,7 +138,6 @@ export default DS.Serializer.extend({
 
     serialize(snapshot :DS.Snapshot, options: any){
         let name = this.parseClassName(snapshot.modelName)
-        let adapter = this.store.adapterFor(name)
         let objModel = Parse.Object.extend(name)
         var ParseObject = new objModel()
 
@@ -208,10 +207,12 @@ export default DS.Serializer.extend({
 
             }
         })
+
         // TRANSFORM RELATIONSHIPS
         //@ts-ignore
         snapshot.eachRelationship((modelKey, meta) => {
             switch (meta.kind){
+
                 case 'belongsTo':
                     if(!snapshot.belongsTo(this.emberKeyFilters(modelKey, snapshot.modelName)))
                         break;
@@ -233,9 +234,11 @@ export default DS.Serializer.extend({
                             this.parseKeyFilters(modelKey, snapshot.modelName),
                             parsePointer
                         )
+
                     break;
                     
                 case 'hasMany':
+
                     if(!snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot.modelName))) 
                         break;
 
@@ -254,6 +257,7 @@ export default DS.Serializer.extend({
                     })
 
                     ParseObject.set(this.parseKeyFilters(modelKey, snapshot.modelName), parsePointers)
+                    
                     break;
     
                 default:
@@ -267,7 +271,7 @@ export default DS.Serializer.extend({
     //================HELPERS==============================
 
     parseKeyFilters(modelKey: string, className :string):String{
-        if(className === 'parse-user' && modelKey === 'salePoint'){
+        if(className === 'parse-user' && (modelKey === 'salePoint' || modelKey === 'salePoints')){
             return 'salePoints'
         } else {
             return modelKey
@@ -275,7 +279,7 @@ export default DS.Serializer.extend({
     },
 
     emberKeyFilters(modelKey:string, className :string){
-        if(className === '_User' && modelKey === 'salePoints'){
+        if(className === '_User' && (modelKey === 'salePoints' || modelKey === 'salePoint')){
             return 'salePoint'
         } else {
             return modelKey
