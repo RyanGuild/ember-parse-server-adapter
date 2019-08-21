@@ -271,7 +271,7 @@ export default DS.Serializer.extend({
     //================HELPERS==============================
 
     parseKeyFilters(modelKey: string, className :string):String{
-        if(className === 'parse-user' && (modelKey === 'salePoint' || modelKey === 'salePoints')){
+        if((className === '_User' || className === 'parse-user') && (modelKey === 'salePoint' || modelKey === 'salePoints')){
             return 'salePoints'
         } else {
             return modelKey
@@ -279,7 +279,7 @@ export default DS.Serializer.extend({
     },
 
     emberKeyFilters(modelKey:string, className :string){
-        if(className === '_User' && (modelKey === 'salePoints' || modelKey === 'salePoint')){
+        if((className === '_User' || className === 'parse-user') && (modelKey === 'salePoints' || modelKey === 'salePoint')){
             return 'salePoint'
         } else {
             return modelKey
