@@ -142,5 +142,9 @@ export default DS.Adapter.extend({
     } else {
         return capitalize(camelize(type));
     }
+  },
+
+  networkErrorHandler(){
+
   }
 })
