@@ -67,6 +67,7 @@ export default class ParseServerAdapter extends Adapter {
       let data = await query.find()
       let refreshed = []
       for (let record of data){
+        //@ts-ignore
         refreshed.push(await record.fetch())
       }
       return refreshed
@@ -106,16 +107,16 @@ export default class ParseServerAdapter extends Adapter {
     let ParseQuery = this.parseQuery(type)
     let queryEntries = Object.entries(queryData)
     try {
-      queryEntries.forEach(([key, value]) => {
-        if(key[0] === '$'){
-          let searchPtr = this.parseQuery({modelName: key.slice(1)} as Model)
-          //@ts-ignore
-          let data = await searchPtr.get(value)
-          ParseQuery.equalTo(key.slice(1), data)
-        } else {
-          ParseQuery.equalTo(key, value)
-        }
-      })
+      for(let [key, value] of queryEntries){
+          if(key[0] === '$'){
+            let searchPtr = this.parseQuery({modelName: key.slice(1)} as Model)
+            //@ts-ignore
+            let data = await searchPtr.get(value)
+            ParseQuery.equalTo(key.slice(1), data)
+          } else {
+            ParseQuery.equalTo(key, value)
+          }
+      }
       return await ParseQuery.find()
     } catch (e){
       this.networkErrorHandler(e)
