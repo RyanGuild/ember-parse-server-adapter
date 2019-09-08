@@ -160,7 +160,7 @@ export default class ParseSerializer extends Serializer {
                 break;
 
             case 'Pointer':
-                if(!Array.isArray(data.relationships[key].data))
+                if(!data.relationships[key] || !data.relationships[key].data || !Array.isArray(data.relationships[key].data))
                     data.relationships[key] = {data:[]}
 
                 data.relationships[key].data
