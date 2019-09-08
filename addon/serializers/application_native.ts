@@ -33,11 +33,28 @@ class ParseSerializer extends Serializer {
 
                 //@ts-ignore
                 case 'parse-file':
-                    let {file, url, ptr } = snapshot.attr(key) as {file :string; url :string; ptr :Parse.File}
+                    let {name, url, ptr } = snapshot.attr(key) as {name :string; url :string; ptr :Parse.File}
                     if(ptr){
-                        ptr
+                        ParseObject.set(key, ptr)
+                    } else {
+                        ParseObject.set(key, new Parse.File(name, {uri:url}))
                     }
                     break;
+                
+                //@ts-ignore
+                case 'parse-file-array':
+                    snapshot
+                        .attr(key)
+                        .map(file => {
+                            let {name, url, ptr } = file
+                            if(ptr){
+                                ParseObject.set(key, ptr)
+                            } else {
+                                ParseObject.set(key, new Parse.File(name, {uri:url}))
+                            }
+                        })
+                    break;
+
                 default:
                     ParseObject.set(key, snapshot.attr(key))
             }
