@@ -1,150 +1,130 @@
-import DS from 'ember-data'
+import Model from '@ember-data/model'
+import Store from '@ember-data/store'
 import Parse from 'parse'
+import DS from 'ember-data'
 import {capitalize, camelize} from '@ember/string'
-import RSVP from 'rsvp'
-import { resolve } from 'path';
-import {computed} from '@ember/object'
 import config from 'ember-get-config'
+import Adapter from '@ember-data/adapter'
 
 
-export default DS.Adapter.extend({
-  host: config.APP.parseUrl,
-  namespace: config.APP.parseNamespace,
-  defaultSerializer: '-parse',
-  classesPath: 'classes',
-  headers: {
+export default class ParseServerAdapter extends Adapter {
+  host = config.APP.parseUrl || 'http://localhost:1337'
+  namespace = config.APP.parseNamespace || 'parse'
+  defaultSerializer = '-parse'
+  classesPath = config.APP.classesPath || 'classes'
+  constHeaders = {
     'X-Parse-Application-Id': config.APP.applicationId,
     'X-Parse-REST-API-Key': config.APP.restApiId
-  },
-  sessionToken: computed('headers.X-Parse-Session-Token',
-    //@ts-ignore
-    function (key: any, value: String): String {
-      if (arguments.length < 2) {
-        return this.get('headers.X-Parse-Session-Token') as String;
-      } else {
-        this.set('headers.X-Parse-Session-Token', value);
-        return value as String;
-      }
-    }),
-  init(){
-    Parse.initialize(config.APP.applicationId, config.APP.restAPIKey)
-    Parse.serverURL = `${this.get('host')}/${this.get('namespace')}`
-  },
+  }
+  sessionToken :String = ''
 
-  findRecord(store:DS.Store, type:DS.Model, id:string, snapshot: DS.Snapshot){
-    return new RSVP.Promise(
-      (function (resolve, reject){
-        let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
-        let query = new Parse.Query(searchObject)
-        query.get(id)
-        .then(async (obj) => { 
-          let data = await obj.fetch()
-          resolve(data)
-        })
-        .catch((data) => reject(data))
-      }).bind(this)
-    )
-    
-  },
-  createRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
-    //@ts-ignore
-    let serializer = store.serializerFor(snapshot.modelName)
-    return new RSVP.Promise(
-      function (resolve, reject) {
-        let saveObject = serializer.serialize(snapshot, {includeId: true})
-        saveObject.save()
-          .then((data) => resolve(data))
-          .catch((data) => reject(data))
-      }
-    )
-  },
-  updateRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
-    //@ts-ignore
-    let serializer = store.serializerFor(snapshot.modelName)
-    return new RSVP.Promise(
-      async function (resolve, reject) {
-        let saveObject = await serializer.serialize(snapshot, {includeId: true})
-        saveObject.save()
-          .then((data) => resolve(data))
-          .catch((data) => reject(data))
-      }
-    )
-  },
-  deleteRecord(store: DS.Store, type:DS.Model, snapshot: DS.Snapshot){
-    return new RSVP.Promise(
-      (function (resolve, reject){
-        let searchObject = Parse.Object.extend(this.parseClassName(snapshot.modelName))
-        let query = new Parse.Query(searchObject)
-        query.get(snapshot.id)
-          .then((data) => {
-            data.destroy()
-              .then((myObject) => resolve()) 
-              .catch((error) => reject(error));
-          })
-          .catch((data) => reject(data))
-      }).bind(this)
-    )
-  },
-  findAll(snapshotRecordArray :DS.SnapshotRecordArray<any>, type: DS.Model){
-    return new RSVP.Promise(
-      (function (resolve, reject){
-        //@ts-ignore
-        let searchObject = Parse.Object.extend(this.parseClassName(type.modelName))
-        let query = new Parse.Query(searchObject)
-        query.find()
-        .then((objArr) => {
-          let promises = objArr.map((obj) => obj.fetch())
-          Promise
-            .all(promises)
-            .then(data => resolve(data))
-        })
-        .catch((data) => reject(data))
-      }).bind(this)
-    )
-  },
-  query(store :DS.Store, type :DS.Model, queryData :any, recordArray :DS.AdapterPopulatedRecordArray<any>){
-    return new RSVP.Promise(
-      (function (resolve, reject){
-        //@ts-ignore
-        let searchObject = Parse.Object.extend(this.parseClassName(type.modelName))
-        let query = new Parse.Query(searchObject)
-        let queryEntries = Object.entries(queryData)
-        RSVP.Promise.all(queryEntries.map(async ([key, value])=> {
-            return new RSVP.Promise((ret,_) => {
-              let ptr
-              if(key[0] === '$'){
-                let searchPtr = new Parse.Query(Parse.Object.extend(this.parseClassName(key.slice(1))))
-                //@ts-ignore
-                searchPtr.get(value as string)
-                  .then((searchVal) => {
-                    query.equalTo(key.slice(1), searchVal)
-                    ret()
-                  })
-              } else {
-                ptr = value
-                query.equalTo(key, value)
-                ret()
-              }
-          })
-        }))
-        .then(() => {
-          query.find()
-          .then((data) => {
-            resolve(data)
-          })
-          .catch((data) => reject(data))
-        })
-      }).bind(this))
-  },
-  parseClassName(type): String {
+  constructor(){
+    super(...arguments)
+    Parse.initialize(config.APP.applicationId, config.APP.restAPIKey)
+    Parse.serverURL = `${this.host}/${this.namespace}`
+  }
+
+  get headers(){
+    return {
+      ...this.constHeaders,
+      'X-Parse-Session-Token': this.sessionToken
+    }
+  }
+
+  parseQuery(type :Model) :Parse.Query{
+    let searchObject = Parse.Object.extend(this.parseClassName(type.modelName))
+    return new Parse.Query(searchObject)
+  }
+
+  parseObject(snapshot, store) :Parse.Object{
+    let serializer = store.serializerFor(snapshot)
+    return serializer.serialize(snapshot, {includeId: true})
+  }
+
+  parseClassName(type :string): string {
     if ('parse-user' === type || 'admin' === type || 'seller' === type || 'buyer' === type) {
         return '_User';
     } else {
         return capitalize(camelize(type));
     }
-  },
+  }
 
-  networkErrorHandler(){
+  async findRecord(store:Store, type:Model, id:string, snapshot: DS.Snapshot) :Promise<Parse.Object>{
+    try {
+      let query = this.parseQuery(type)
+      let data =  await query.get(id)
+      let fresh = await data.fetch()
+      return fresh
+    } catch (e){
+      this.networkErrorHandler(e)
+      throw "Fetch Object Failed"
+    } 
+  }
+
+  async findAll(store :Store, type:Model, neverSet :undefined, snapshotRecordArray :DS.SnapshotRecordArray) :Promise<Parse.Object[]>{
+    try{
+      let query = this.parseQuery(type)
+      let data = await query.find()
+      let refreshed = []
+      for (let record of data){
+        //@ts-ignore
+        refreshed.push(await record.fetch())
+      }
+      return refreshed
+    }catch(e){
+      this.networkErrorHandler(e)
+      throw "Failed to FindAll"
+    }
+  }
+
+  async createRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<Parse.Object>{
+    try {
+      let ParseObject = this.parseObject(snapshot, store)
+      return await ParseObject.save()
+    }catch (e){
+      this.networkErrorHandler(e)
+      throw "Failed to createRecord"
+    }
+  }
+
+  async updateRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<Parse.Object>{
+    return this.createRecord(store, type, snapshot)
+  }
+
+  async deleteRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<void>{
+    try{
+      let ParseQuery = this.parseQuery(snapshot)
+      let data = await ParseQuery.get(snapshot.id)
+      await data.destroy();
+      return 
+    } catch (e){
+      this.networkErrorHandler(e)
+      throw "Failed to deleteRecord"
+    }
+  }
+
+  async query(store :Store, type :Model, queryData :any, recordArray :DS.AdapterPopulatedRecordArray<any>){
+    let ParseQuery = this.parseQuery(type)
+    let queryEntries = Object.entries(queryData)
+    try {
+      for(let [key, value] of queryEntries){
+          if(key[0] === '$'){
+            let searchPtr = this.parseQuery({modelName: key.slice(1)} as Model)
+            //@ts-ignore
+            let data = await searchPtr.get(value)
+            ParseQuery.equalTo(key.slice(1), data)
+          } else {
+            ParseQuery.equalTo(key, value)
+          }
+      }
+      return await ParseQuery.find()
+    } catch (e){
+      this.networkErrorHandler(e)
+      throw "Failed to fetch query"
+    }
+  }
+
+  networkErrorHandler(err){
 
   }
-})
+}

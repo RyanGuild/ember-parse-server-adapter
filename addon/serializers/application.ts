@@ -2,21 +2,105 @@ import DS from 'ember-data'
 import Parse from 'parse'
 import {capitalize, camelize, dasherize} from '@ember/string'
 import config from 'ember-get-config'
-import {computed, default as emberObject} from '@ember/object' 
-import {A} from '@ember/array'
-import {inject} from '@ember/service'
+import Serializer from '@ember-data/serializer'
+import Model from '@ember-data/model'
+import Store from '@ember-data/store'
 
-export default DS.Serializer.extend({
-    router: inject(),
-    primaryKey: 'objectId',
-    keyMappings: computed(() => {
-        return config.APP.keyMapping
-    }),
+export default class ParseSerializer extends Serializer {
+    primaryKey ='objectId'
+    keyMappings = config.APP.keyMapping
 
 
-    //================NORMALIZATION=============================
+    //====================SERIALIZATION=====================
+    serialize(snapshot :DS.Snapshot, options: any) :any{
+        let name = this.parseClassName(snapshot.modelName)
+        let objModel = Parse.Object.extend(name)
+        var ParseObject = new objModel()
 
-    normalizeResponse(store :DS.Store, primaryModelClass :DS.Model, payload :Parse.Object|Array<Parse.Object>, id :String|Number, requestType :String){
+
+        if(options && options.includeId) 
+            ParseObject.id = snapshot.id
+
+        snapshot.eachAttribute((key :string, meta) => {
+            switch(meta.type){
+                //@ts-ignore
+                case 'parse-geo-point':
+                    let {latitude, longitude} = snapshot.attr(key)
+                    ParseObject.set(key, new Parse.GeoPoint({latitude, longitude}))
+                    break;
+
+                //@ts-ignore
+                case 'parse-file':
+                    let {name, url, ptr } = snapshot.attr(key) as {name :string; url :string; ptr :Parse.File}
+                    if(ptr){
+                        ParseObject.set(key, ptr)
+                    } else {
+                        ParseObject.set(key, new Parse.File(name, {uri:url}))
+                    }
+                    break;
+                
+                //@ts-ignore
+                case 'parse-file-array':
+                    snapshot
+                        .attr(key)
+                        .map(file => {
+                            let {name, url, ptr } = file
+                            if(ptr){
+                                ParseObject.set(key, ptr)
+                            } else {
+                                ParseObject.set(key, new Parse.File(name, {uri:url}))
+                            }
+                        })
+                    break;
+
+                default:
+                    ParseObject.set(key, snapshot.attr(key))
+            }
+        }, this)
+
+        snapshot.eachRelationship((modelKey, meta) => {
+            switch (meta.kind){
+
+                case 'belongsTo':
+                    if(!snapshot.belongsTo(modelKey))
+                        break;
+                    
+                    //@ts-ignore
+                    let dataID = snapshot.belongsTo(modelKey).id
+
+                    let model = Parse.Object.extend(this.parseClassName(modelKey))
+                    let parsePointer = model.createWithoutData(dataID)
+                    ParseObject.set(modelKey,parsePointer)
+                    break;
+                    
+                case 'hasMany':
+
+                    if(!snapshot.hasMany(modelKey)) 
+                        break;
+
+                    let data = snapshot.hasMany(modelKey)
+
+                    if(!data) 
+                        break;
+
+                    let parsePointers = data.map((entry) => {
+                        let model = Parse.Object.extend(this.parseClassName(modelKey))
+                        let valuePtr = model.createWithoutData(entry.id)
+                        return valuePtr
+                    })
+                    ParseObject.set(modelKey, parsePointers)
+                    break;
+    
+                default:
+                    break;
+            }
+        }, this)
+
+    }
+
+    //==================NORMALIZATION===========================
+
+    normalizeResponse(store :Store, primaryModelClass :Model, payload :Parse.Object|Array<Parse.Object>, id :String|Number, requestType :String){
         if(Array.isArray(payload)){
             let data = {
                 data: this.normalizeArrayResponse(store, primaryModelClass, payload, id, requestType),
@@ -32,17 +116,13 @@ export default DS.Serializer.extend({
         } else{
             return null
         }
-    },
+    }
 
-
-
-    normalizeArrayResponse(store :DS.Store, primaryModelClass :DS.Model, payload :Parse.Object[], id :String|Number, requestType :String){
+    normalizeArrayResponse(store :Store, primaryModelClass :Model, payload :Parse.Object[], id :String|Number, requestType :String){
         return payload.map(item => this.normalize(primaryModelClass, item))
-    },
+    }
 
-
-
-    normalize(typeClass :DS.Model, hash :Parse.Object){
+    normalize(typeClass :Model, hash :Parse.Object){
         if(!hash) return {}
 
         let data = {
@@ -52,274 +132,152 @@ export default DS.Serializer.extend({
             relationships:{}
         }
 
-        //@ts-ignore
-        typeClass.eachAttribute((modelKey, meta) => {
-            let emberAttr
-            if(hash.get(modelKey) != null && hash.get(modelKey) != undefined){
-            switch(modelKey){
-                case 'location':
-                    emberAttr = emberObject.create({
-                        latitude: hash.get('location').latitude,
-                        longitude: hash.get('location').longitude
-                        })
-                    break;
+        let rawJSON = hash.toJSON()
 
-                case 'profilePhoto':
-                    emberAttr = emberObject.create({
-                        url: hash.get(modelKey).url(),
-                        name: hash.get(modelKey).name(),
-                        filePtr: hash.get(modelKey),
-                    })
-                    break;
+        Object
+            .entries(rawJSON)
+            .forEach(([key, value]) => {
+                if(typeof value === "object"){
+                    if(!value) return
 
-                case 'images':
-                    emberAttr = A([])
-                    hash.get(modelKey).map((item :Parse.File) => {
-                        return emberObject.create({
-                            url: item.url(),
-                            name: item.name(),
-                            filePtr: item
-                        })
-                    }).forEach(item => {
-                        emberAttr.pushObject(item)
-                    })
-                    break;
-
-                default:
-                    emberAttr = hash.get(modelKey)
-                    break;
-            }
-            data.attributes[modelKey] = emberAttr
-        }})
-        typeClass.eachRelationship((modelKey, meta) => {
-            switch(meta.kind){
-                case 'hasMany':
-
-                    if(!data.relationships[this.emberKeyFilters(modelKey, hash.className)]){ 
-
-                        data.relationships[this.emberKeyFilters(modelKey, hash.className)] = {data:[]}
-
+                    if(Array.isArray(value)){
+                        this.NormalizeParseArray(data, key, value)
+                    }else{
+                        this.NormalizeParseObject(data, key, value)
                     }
-
-                    if(hash.get(this.parseKeyFilters(modelKey, hash.className))){
-
-                        hash.get(this.parseKeyFilters(modelKey, hash.className)).forEach(item => { 
-
-                            let entry = {id:item.id, type: this.emberClassName(modelKey)}
-                            data.relationships[this.emberKeyFilters(modelKey, hash.className)].data.push(entry)
-
-                        })
-                    }
-                    break;
-
-
-                case 'belongsTo':
-                    if(hash.get(this.parseKeyFilters(modelKey, hash.className))){
-
-                        let entry = {
-
-                            id: hash.get(this.parseKeyFilters(modelKey, hash.className)).id,
-                            type: this.emberClassName(modelKey)
-
-                        }
-
-                        data.relationships[this.emberKeyFilters(modelKey, hash.className)] = { data: entry}
-                    }
-                    break;
-            }
-        })
+                } else {
+                    data.attributes[key] = value
+                }
+            })
         return data
-    },
+    }
 
+    NormalizeParseObject(data: { id: string; type: string; attributes: {}; relationships: {}; }, key: string, value: any) {
+        if(typeof value === "object" && value.hasOwnProperty("__type"))
+        switch(value.__type){
+            case 'Date':
+                data.attributes[key] = new Date(value.iso)
+                break;
 
+            case 'Pointer':
+                if(!Array.isArray(data.relationships[key].data))
+                    data.relationships[key] = {data:[]}
 
+                data.relationships[key].data
+                    .push({type: value.className, id: value.objectId})
+                break;
 
-    //====================SERIALIZATION=====================
+            case 'File':
+                data.attributes[key] = {name: value.name, url: value.url, ptr:value}
+                break;
 
+            case 'GeoPoint':
+                data.attributes[key] = {latitude: value.latitude, longitude: value.longitude}
+                break;
 
-    serialize(snapshot :DS.Snapshot, options: any){
-        let name = this.parseClassName(snapshot.modelName)
-        let objModel = Parse.Object.extend(name)
-        var ParseObject = new objModel()
+            default:
+                throw "unrecognised parse type"
+        }
+    }
 
+    NormalizeParseArray(data: { id: string; type: string; attributes: {}; relationships: {}; }, key: string, value: any[]) :void {
+        let firstEntry = value[0]
+        if (typeof firstEntry === 'object' && firstEntry.hasOwnProperty("__type")){
+            switch(firstEntry.__type){
 
-        if(options && options.includeId) ParseObject.id = snapshot.id
-
-        //TRANSFORM ATTRIBUTES
-
-        snapshot.eachAttribute(function (modelKey, meta){
-            switch(modelKey){
-                case 'location':
-                    if (snapshot.attr('location'))
-                        ParseObject.set(
-                            modelKey,
-                            new Parse.GeoPoint(
-                                snapshot
-                                    .attr('location')
-                                    .get('latitude'),
-                                snapshot
-                                    .attr('location')
-                                    .get('longitude')
-                            )
-                        )
+                case 'Date':
+                    data.attributes[key] = value
+                        .map(item => (new Date(item.iso)))
                     break;
 
-                case 'profilePhoto':
-                    if (snapshot.attr(modelKey) && snapshot.attr(modelKey).get('filePtr')){
-                        console.debug(
-                            snapshot
-                            .attr(modelKey)
-                            .get('filePtr')
-                        )
-
-                        ParseObject.set(
-                            modelKey,
-                            snapshot
-                                .attr(modelKey)
-                                .get('filePtr')
-                        )
-                    }
-                    break;
-
-                case 'images':
-                    try{
-                        if(!ParseObject.get(modelKey) || ((typeof ParseObject.get(modelKey)) != 'object')) {
-                            ParseObject.set(modelKey, [])
-                            break;
-                        }
-                        if (snapshot.attr(modelKey)){
-                            let files = snapshot
-                                .attr(modelKey)
-                                .toArray()
-                                .map(item => {
-                                    return item.get('filePtr')
-                                })
-                            ParseObject.set(modelKey, files)
-                        }
-                    } catch (e){
-                        console.error(e)
-                        break;
-                    }
-                    break;
-
-                default:
-                    ParseObject.set(modelKey, snapshot.attr(modelKey))
-                    break;
-
-            }
-        })
-
-        // TRANSFORM RELATIONSHIPS
-        //@ts-ignore
-        snapshot.eachRelationship((modelKey, meta) => {
-            switch (meta.kind){
-
-                case 'belongsTo':
-                    if(!snapshot.belongsTo(this.emberKeyFilters(modelKey, snapshot.modelName)))
-                        break;
-                    
-                    //@ts-ignore
-                    let dataID = snapshot
-                        .belongsTo(
-                            this.emberKeyFilters(modelKey, snapshot.modelName)
-                        ).id
-
-                    let parsePointer = Parse
-                        .Object
-                        .createWithoutData(dataID)
-
-                    parsePointer.className = this.parseClassName(modelKey)
-
-                    ParseObject
-                        .set(
-                            this.parseKeyFilters(modelKey, snapshot.modelName),
-                            parsePointer
-                        )
-
-                    break;
-                    
-                case 'hasMany':
-
-                    if(!snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot.modelName))) 
-                        break;
-
-                    let data = snapshot.hasMany(this.emberKeyFilters(modelKey, snapshot.modelName))
-
-                    if(!data) 
-                        break;
-
-                    let parsePointers = data.map((entry) => {
-                        let valuePtr = Parse
-                            .Object
-                            .createWithoutData(entry.id)
-
-                        valuePtr.className = this.parseClassName(entry.modelName)
-                        return valuePtr
+                case 'Pointer':
+                    data.relationships[key] = {data:[]}
+                    value.forEach(item => {
+                        data.relationships[key].data
+                            .push({type: item.className, id: item.objectId})
                     })
+                    break;
 
-                    ParseObject.set(this.parseKeyFilters(modelKey, snapshot.modelName), parsePointers)
-                    
+                case 'File':
+                    data.attributes[key] = value
+                        .map(item => ({name: item.name, url: item.url, ptr:item}))
                     break;
-    
+
+                case 'GeoPoint':
+                    data.attributes[key] = value
+                        .map(item => ({latitude: item.latitude, longitude: item.longitude}))
+                    break;
+
                 default:
-                    break;
+                    throw "unrecognised parse type"
             }
-        })
-        return ParseObject
-    },
+        } else {
+            data.attributes[key] = value
+        }
+    }
 
 
     //================HELPERS==============================
 
-    parseKeyFilters(modelKey: string, className :string):String{
-        if((className === '_User' || className === 'parse-user') && (modelKey === 'salePoint' || modelKey === 'salePoints')){
+    parseKeyFilters(modelKey: string, className :string) :string{
+        if(
+            (className === '_User' || className === 'parse-user') &&
+            (modelKey === 'salePoint' || modelKey === 'salePoints')
+        ){
             return 'salePoints'
-        } else if((className === 'CartOrder' || className === 'cart-order') && (modelKey === 'orderItem' || modelKey === 'orderItems')){
+        } else if(
+            (className === 'CartOrder' || className === 'cart-order') && 
+            (modelKey === 'orderItem' || modelKey === 'orderItems')
+        ){
             return 'orderItems'
         } else {
             return modelKey
         }
-    },
+    }
 
-    emberKeyFilters(modelKey:string, className :string){
-        if((className === '_User' || className === 'parse-user') && (modelKey === 'salePoints' || modelKey === 'salePoint')){
+    emberKeyFilters(modelKey:string, className :string) :string{
+        if(
+            (className === '_User' || className === 'parse-user') && 
+            (modelKey === 'salePoints' || modelKey === 'salePoint')
+        ){
             return 'salePoint'
-        } else if((className === 'CartOrder' || className === 'cart-order') && (modelKey === 'orderItem' || modelKey === 'orderItems')){
+        } else if(
+            (className === 'CartOrder' || className === 'cart-order') && 
+            (modelKey === 'orderItem' || modelKey === 'orderItems')
+        ){
             return 'orderItem'
         } else {
             return modelKey
         }
-    },
+    }
 
-    parseClassName(type): String {
-        if ('parse-user' === type || 'admin' === type || 'seller' === type || 'buyer' === type) {
+    parseClassName(type) :string{
+        if (
+            'parse-user' === type ||
+            'admin' === type || 
+            'seller' === type || 
+            'buyer' === type
+        ) {
             return '_User';
         }else {
             return capitalize(camelize(type));
         }
-    },
-    emberClassName(modelKey) {
-        if(!modelKey) return ""
-        let name
-        if(modelKey === '_User' || modelKey === 'admin' || modelKey === 'seller' || modelKey === 'buyer'){
-            name = 'parse-user'
-        }else if(modelKey === 'products'){
-            name = 'product'
-        }else {
-            name = dasherize(modelKey)
-        } 
-        return name
-    },
-    NetworkErrorHandler(errorCode, errorBody){
-        switch (errorCode){
-            case 209:
-                Parse.User.logOut()
-                this.router.transitionTo('login');
-                return
-            default:
-                return
-        }
     }
-})
+    emberClassName(modelKey :string) :string{
+        if(!modelKey) return ""
+        if(
+            modelKey === '_User' || 
+            modelKey === 'admin' || 
+            modelKey === 'seller' || 
+            modelKey === 'buyer'
+        ){
+            return 'parse-user'
+        }else if(modelKey === 'products'){
+            return 'product'
+        }else {
+            return dasherize(modelKey)
+        } 
+    }
 
-
+    
+}
