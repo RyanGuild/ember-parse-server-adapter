@@ -60,6 +60,44 @@ class ParseSerializer extends Serializer {
             }
         }, this)
 
+        snapshot.eachRelationship((modelKey, meta) => {
+            switch (meta.kind){
+
+                case 'belongsTo':
+                    if(!snapshot.belongsTo(modelKey))
+                        break;
+                    
+                    //@ts-ignore
+                    let dataID = snapshot.belongsTo(modelKey).id
+
+                    let model = Parse.Object.extend(this.parseClassName(modelKey))
+                    let parsePointer = model.createWithoutData(dataID)
+                    ParseObject.set(modelKey,parsePointer)
+                    break;
+                    
+                case 'hasMany':
+
+                    if(!snapshot.hasMany(modelKey)) 
+                        break;
+
+                    let data = snapshot.hasMany(modelKey)
+
+                    if(!data) 
+                        break;
+
+                    let parsePointers = data.map((entry) => {
+                        let model = Parse.Object.extend(this.parseClassName(modelKey))
+                        let valuePtr = model.createWithoutData(entry.id)
+                        return valuePtr
+                    })
+                    ParseObject.set(modelKey, parsePointers)
+                    break;
+    
+                default:
+                    break;
+            }
+        }, this)
+
     }
 
     //==================NORMALIZATION===========================
