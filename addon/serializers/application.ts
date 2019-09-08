@@ -3,10 +3,11 @@ import Parse from 'parse'
 import {capitalize, camelize, dasherize} from '@ember/string'
 import config from 'ember-get-config'
 import {computed, default as emberObject} from '@ember/object' 
-import RSVP from 'rsvp';
 import {A} from '@ember/array'
+import {inject} from '@ember/service'
 
 export default DS.Serializer.extend({
+    router: inject(),
     primaryKey: 'objectId',
     keyMappings: computed(() => {
         return config.APP.keyMapping
@@ -308,5 +309,17 @@ export default DS.Serializer.extend({
             name = dasherize(modelKey)
         } 
         return name
+    },
+    NetworkErrorHandler(errorCode, errorBody){
+        switch (errorCode){
+            case 209:
+                Parse.User.logOut()
+                this.router.transitionTo('login');
+                return
+            default:
+                return
+        }
     }
 })
+
+

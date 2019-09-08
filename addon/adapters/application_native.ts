@@ -65,6 +65,11 @@ export default class ParseServerAdapter extends Adapter {
     try{
       let query = this.parseQuery(type)
       let data = await query.find()
+      let refreshed = []
+      for (let record of data){
+        refreshed.push(await record.fetch())
+      }
+      return refreshed
     }catch(e){
       this.networkErrorHandler(e)
       throw "Failed to FindAll"
