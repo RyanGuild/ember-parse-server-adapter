@@ -36,8 +36,8 @@ export default class ParseServerAdapter extends Adapter {
     return new Parse.Query(searchObject)
   }
 
-  parseObject(snapshot, store) :Parse.Object{
-    let serializer = store.serializerFor(snapshot)
+  parseObject(snapshot :DS.Snapshot, store) :Parse.Object{
+    let serializer = store.serializerFor(snapshot.modelName)
     return serializer.serialize(snapshot, {includeId: true})
   }
 
