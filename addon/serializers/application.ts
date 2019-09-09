@@ -153,26 +153,27 @@ export default class ParseSerializer extends Serializer {
     }
 
     NormalizeParseObject(data: { id: string; type: string; attributes: {}; relationships: {}; }, key: string, value: any) {
-        if(value && typeof value === "object" && value.hasOwnProperty("__type"))
-        switch(value.__type){
-            case 'Date':
-                data.attributes[key] = new Date(value.iso)
-                break;
+        if(value && typeof value === "object" && value.hasOwnProperty("__type")){
+            switch(value.__type){
+                case 'Date':
+                    data.attributes[key] = new Date(value.iso)
+                    break;
 
-            case 'Pointer':
-                data.relationships[key] = {data:[{type: value.className, id: value.objectId}]}
-                break;
+                case 'Pointer':
+                    data.relationships[key] = {data:{type: value.className, id: value.objectId}}
+                    break;
 
-            case 'File':
-                data.attributes[key] = {name: value.name, url: value.url, ptr:value}
-                break;
+                case 'File':
+                    data.attributes[key] = {name: value.name, url: value.url, ptr:value}
+                    break;
 
-            case 'GeoPoint':
-                data.attributes[key] = {latitude: value.latitude, longitude: value.longitude}
-                break;
+                case 'GeoPoint':
+                    data.attributes[key] = {latitude: value.latitude, longitude: value.longitude}
+                    break;
 
-            default:
-                throw "unrecognised parse type"
+                default:
+                    throw "unrecognised parse type"
+            }
         }
     }
 
