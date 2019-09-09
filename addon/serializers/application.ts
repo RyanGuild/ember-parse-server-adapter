@@ -153,18 +153,14 @@ export default class ParseSerializer extends Serializer {
     }
 
     NormalizeParseObject(data: { id: string; type: string; attributes: {}; relationships: {}; }, key: string, value: any) {
-        if(typeof value === "object" && value.hasOwnProperty("__type"))
+        if(value && typeof value === "object" && value.hasOwnProperty("__type"))
         switch(value.__type){
             case 'Date':
                 data.attributes[key] = new Date(value.iso)
                 break;
 
             case 'Pointer':
-                if(!data.relationships[key] || !data.relationships[key].data || !Array.isArray(data.relationships[key].data))
-                    data.relationships[key] = {data:[]}
-
-                data.relationships[key].data
-                    .push({type: value.className, id: value.objectId})
+                data.relationships[key] = {data:[{type: value.className, id: value.objectId}]}
                 break;
 
             case 'File':
@@ -182,7 +178,7 @@ export default class ParseSerializer extends Serializer {
 
     NormalizeParseArray(data: { id: string; type: string; attributes: {}; relationships: {}; }, key: string, value: any[]) :void {
         let firstEntry = value[0]
-        if (typeof firstEntry === 'object' && firstEntry.hasOwnProperty("__type")){
+        if (firstEntry && typeof firstEntry === 'object' && firstEntry.hasOwnProperty("__type")){
             switch(firstEntry.__type){
 
                 case 'Date':
