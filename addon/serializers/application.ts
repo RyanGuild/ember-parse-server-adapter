@@ -160,7 +160,7 @@ export default class ParseSerializer extends Serializer {
                     break;
 
                 case 'Pointer':
-                    data.relationships[key] = {data:{type: value.className, id: value.objectId}}
+                    data.relationships[key] = {data:{type: this.emberClassName(value.className), id: value.objectId}}
                     break;
 
                 case 'File':
@@ -191,7 +191,7 @@ export default class ParseSerializer extends Serializer {
                     data.relationships[key] = {data:[]}
                     value.forEach(item => {
                         data.relationships[key].data
-                            .push({type: item.className, id: item.objectId})
+                            .push({type: this.emberClassName(item.className), id: item.objectId})
                     })
                     break;
 
