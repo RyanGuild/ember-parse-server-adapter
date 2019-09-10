@@ -37,7 +37,7 @@ export default class ParseSerializer extends Serializer {
                     let {name, url, ptr } = snapshot.attr(key) as {name :string; url :string; ptr :Parse.File}
                     if(ptr){
                         ParseObject.set(key, ptr)
-                    } else {
+                    } else if (name && url){
                         ParseObject.set(key, new Parse.File(name, {uri:url}))
                     }
                     break;
@@ -50,7 +50,7 @@ export default class ParseSerializer extends Serializer {
                             let {name, url, ptr } = file
                             if(ptr){
                                 ParseObject.set(key, ptr)
-                            } else {
+                            } else if (name && url) {
                                 ParseObject.set(key, new Parse.File(name, {uri:url}))
                             }
                         })
