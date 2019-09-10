@@ -6,28 +6,6 @@ import Serializer from '@ember-data/serializer'
 import Model from '@ember-data/model'
 import Store from '@ember-data/store'
 
-class ParseObjectStore {
-
-}
-
-class ParseObjectWrapper {
-    __ParsePtr;
-    __ObjectId;
-
-    constructor(objectId :string) {
-        this.__ParsePtr = null
-        this.__ObjectId = objectId
-    }
-
-    set (property :string, value :any) {
-        if(property)
-    }
-
-    get (property :string){
-
-    }
-}
-
 export default class ParseSerializer extends Serializer {
     primaryKey ='objectId'
     keyMappings = config.APP.keyMapping
