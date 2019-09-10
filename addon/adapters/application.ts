@@ -102,6 +102,7 @@ export default class ParseServerAdapter extends Adapter {
     } catch (e){
       this.networkErrorHandler(e)
       console.error(`"Failed to deleteRecord: ${e}`)
+      return undefined
     }
   }
 
