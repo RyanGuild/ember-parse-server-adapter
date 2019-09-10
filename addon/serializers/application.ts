@@ -26,32 +26,49 @@ export default class ParseSerializer extends Serializer {
             switch(meta.type){
                 //@ts-ignore
                 case 'parse-geo-point':
-                    let {latitude, longitude} = snapshot.attr(key)
-                    if (latitude && longitude) {
-                        ParseObject.set(key, new Parse.GeoPoint({latitude, longitude}))
+                    try {
+                        let point :{latitude:number, longitude:number} = snapshot.attr(key)
+                        ParseObject.set(key, new Parse.GeoPoint({
+                            latitude:point.latitude,
+                            longitude: point.longitude
+                        }))
+                    } catch (e){
+                        console.debug(e.message)
+                        //no-op
                     }
                     break;
 
                 //@ts-ignore
                 case 'parse-file':
-                    let {name, url, ptr } = snapshot.attr(key) as {name :string; url :string; ptr :Parse.File}
-                    if(ptr){
-                        ParseObject.set(key, ptr)
-                    } else if (name && url){
-                        ParseObject.set(key, new Parse.File(name, {uri:url}))
+                    try{
+                        let {name, url, ptr } = snapshot.attr(key) as {name :string; url :string; ptr :Parse.File}
+                        if(ptr){
+                            ParseObject.set(key, ptr)
+                        } else if (name && url){
+                            ParseObject.set(key, new Parse.File(name, {uri:url}))
+                        }
+                    } catch (err) {
+                        console.debug(err)
+                        //no-op
                     }
                     break;
                 
                 //@ts-ignore
                 case 'parse-file-array':
+                    if(snapshot.attr(key))
                     snapshot
                         .attr(key)
                         .map(file => {
-                            let {name, url, ptr } = file
-                            if(ptr){
-                                ParseObject.set(key, ptr)
-                            } else if (name && url) {
-                                ParseObject.set(key, new Parse.File(name, {uri:url}))
+                            try {
+                                let {name, url, ptr } = file
+                                if(ptr){
+                                    ParseObject.set(key, ptr)
+                                } else if (name && url) {
+                                    ParseObject.set(key, new Parse.File(name, {uri:url}))
+                                }
+                            } catch (err) {
+                                console.debug(err)
+                                //no-op
                             }
                         })
                     break;
