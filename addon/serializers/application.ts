@@ -198,7 +198,7 @@ export default class ParseSerializer extends Serializer {
                     break;
 
                 default:
-                    throw "unrecognised parse type"
+                    data.attributes[key] = value
             }
         }
     }
@@ -232,7 +232,7 @@ export default class ParseSerializer extends Serializer {
                     break;
 
                 default:
-                    throw "unrecognised parse type"
+                    data.attributes[key] = value
             }
         } else {
             data.attributes[key] = value
