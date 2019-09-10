@@ -16,16 +16,9 @@ let ENV = config
 export default function (container, app) {
 
   ENV = config
-
-  let configuredAdapter = Adapter.reopenClass({
-    host: ENV.APP.parseUrl || 'test',
-    namespace: ENV.APP.parseNamespace,
-    'headers.X-Parse-Application-Id': ENV.APP.applicationID,
-    'headers.X-Parse-REST-API-Key': ENV.APP.restApiID
-  })
     
   
-  container.register('adapter:-parse', configuredAdapter)
+  container.register('adapter:-parse', Adapter)
   container.register('serializer:-parse', Serializer)
   container.register('transform:parse-date', DateTransform)
   container.register('transform:parse-file', FileTransform)
