@@ -27,7 +27,9 @@ export default class ParseSerializer extends Serializer {
                 //@ts-ignore
                 case 'parse-geo-point':
                     let {latitude, longitude} = snapshot.attr(key)
-                    ParseObject.set(key, new Parse.GeoPoint({latitude, longitude}))
+                    if (latitude && longitude) {
+                        ParseObject.set(key, new Parse.GeoPoint({latitude, longitude}))
+                    }
                     break;
 
                 //@ts-ignore
