@@ -49,7 +49,7 @@ export default class ParseServerAdapter extends Adapter {
     }
   }
 
-  async findRecord(store:Store, type:Model, id:string, snapshot: DS.Snapshot) :Promise<Parse.Object>{
+  async findRecord(store:Store, type:Model, id:string, snapshot: DS.Snapshot) :Promise<Parse.Object | undefined> {
     try {
       let query = this.parseQuery(type)
       let data =  await query.get(id)
@@ -57,11 +57,12 @@ export default class ParseServerAdapter extends Adapter {
       return fresh
     } catch (e){
       this.networkErrorHandler(e)
-      throw "Fetch Object Failed"
+      console.error(`Fetch Object Failed: ${e}`)
+      return undefined
     } 
   }
 
-  async findAll(store :Store, type:Model, neverSet :undefined, snapshotRecordArray :DS.SnapshotRecordArray) :Promise<Parse.Object[]>{
+  async findAll(store :Store, type:Model, neverSet :undefined, snapshotRecordArray :DS.SnapshotRecordArray<any>) :Promise<Parse.Object[] | undefined> {
     try{
       let query = this.parseQuery(type)
       let data = await query.find()
@@ -73,21 +74,23 @@ export default class ParseServerAdapter extends Adapter {
       return refreshed
     }catch(e){
       this.networkErrorHandler(e)
-      throw "Failed to FindAll"
+      console.error(`Failed to FindAll: ${e}`)
+      return undefined
     }
   }
 
-  async createRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<Parse.Object>{
+  async createRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<Parse.Object | undefined> {
     try {
       let ParseObject = this.parseObject(snapshot, store)
       return await ParseObject.save()
     }catch (e){
       this.networkErrorHandler(e)
-      throw "Failed to createRecord"
+      console.error(`Failed to createRecord: ${e}`)
+      return undefined
     }
   }
 
-  async updateRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<Parse.Object>{
+  async updateRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<Parse.Object | undefined>{
     return this.createRecord(store, type, snapshot)
   }
 
@@ -96,16 +99,22 @@ export default class ParseServerAdapter extends Adapter {
       let ParseQuery = this.parseQuery(snapshot)
       let data = await ParseQuery.get(snapshot.id)
       await data.destroy();
-      return 
     } catch (e){
       this.networkErrorHandler(e)
-      throw "Failed to deleteRecord"
+      console.error(`"Failed to deleteRecord: ${e}`)
     }
   }
 
-  async query(store :Store, type :Model, queryData :any, recordArray :DS.AdapterPopulatedRecordArray<any>){
+  async query(
+    store :Store, 
+    type :Model, 
+    queryData :any, 
+    recordArray :DS.AdapterPopulatedRecordArray<any>
+  ):Promise<Parse.Object | Parse.Object[] | undefined> {
+
     let ParseQuery = this.parseQuery(type)
     let queryEntries = Object.entries(queryData)
+
     try {
       for(let [key, value] of queryEntries){
           if(key[0] === '$'){
@@ -120,7 +129,8 @@ export default class ParseServerAdapter extends Adapter {
       return await ParseQuery.find()
     } catch (e){
       this.networkErrorHandler(e)
-      throw "Failed to fetch query"
+      console.error(`"Failed to fetch query: ${e}`)
+      return undefined
     }
   }
 
