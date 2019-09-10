@@ -42,7 +42,7 @@ export default class ParseSerializer extends Serializer {
                 case 'parse-file':
                     try{
                         let file = snapshot.attr(key) as {name :string; url :string; ptr :Parse.File}
-                        if(file){
+                        if(file && typeof file === 'object' && file.hasOwnProperty("name") && file.hasOwnProperty("url")){
                             let {name, url, ptr } = file
                             if(ptr){
                                 ParseObject.set(key, ptr)
@@ -63,11 +63,13 @@ export default class ParseSerializer extends Serializer {
                         .attr(key)
                         .map(file => {
                             try {
-                                let {name, url, ptr } = file
-                                if(ptr){
-                                    ParseObject.set(key, ptr)
-                                } else if (name && url) {
-                                    ParseObject.set(key, new Parse.File(name, {uri:url}))
+                                if(file && typeof file === 'object' && file.hasOwnProperty("name") && file.hasOwnProperty("url")){
+                                    let {name, url, ptr } = file
+                                    if(ptr){
+                                        ParseObject.set(key, ptr)
+                                    } else if (name && url) {
+                                        ParseObject.set(key, new Parse.File(name, {uri:url}))
+                                    }
                                 }
                             } catch (err) {
                                 console.debug(err)
@@ -119,6 +121,7 @@ export default class ParseSerializer extends Serializer {
             }
         }, this)
 
+        return ParseObject
     }
 
     //==================NORMALIZATION===========================
