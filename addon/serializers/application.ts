@@ -22,6 +22,7 @@ export default class ParseSerializer extends Serializer {
             ParseObject.id = snapshot.id
 
         snapshot.eachAttribute((key :string, meta) => {
+            console.debug(meta.type)
             switch(meta.type){
                 //@ts-ignore
                 case 'parse-geo-point':
