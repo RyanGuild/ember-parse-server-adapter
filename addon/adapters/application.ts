@@ -50,6 +50,7 @@ export default class ParseServerAdapter extends Adapter {
   }
 
   async findRecord(store:Store, type:Model, id:string, snapshot: DS.Snapshot) :Promise<Parse.Object | undefined> {
+    console.debug(`[Parse-Adapter][findRecord]: <${type}:${snapshot.id ? snapshot.id :'undefined'}>`)
     try {
       let query = this.parseQuery(type)
       let data =  await query.get(id)
@@ -63,6 +64,7 @@ export default class ParseServerAdapter extends Adapter {
   }
 
   async findAll(store :Store, type:Model, neverSet :undefined, snapshotRecordArray :DS.SnapshotRecordArray<any>) :Promise<Parse.Object[] | undefined> {
+    console.debug(`[Parse-Adapter][findAll]: <${type}>`)
     try{
       let query = this.parseQuery(type)
       let data = await query.find()
@@ -80,6 +82,7 @@ export default class ParseServerAdapter extends Adapter {
   }
 
   async createRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<Parse.Object | undefined> {
+    console.debug(`[Parse-Adapter][createRecord]: <${type}>`)
     try {
       let ParseObject = this.parseObject(snapshot, store)
       return await ParseObject.save()
@@ -95,6 +98,7 @@ export default class ParseServerAdapter extends Adapter {
   }
 
   async deleteRecord(store: Store, type:Model, snapshot: DS.Snapshot) :Promise<void>{
+    console.debug(`[Parse-Adapter][deleteRecord]: <${type}:${snapshot.id ? snapshot.id :'undefined'}>`)
     try{
       let ParseQuery = this.parseQuery(snapshot)
       let data = await ParseQuery.get(snapshot.id)
@@ -112,7 +116,7 @@ export default class ParseServerAdapter extends Adapter {
     queryData :any, 
     recordArray :DS.AdapterPopulatedRecordArray<any>
   ):Promise<Parse.Object | Parse.Object[] | undefined> {
-
+    console.debug(`[Parse-Adapter][query]: <${type}>`)
     let ParseQuery = this.parseQuery(type)
     let queryEntries = Object.entries(queryData)
 
